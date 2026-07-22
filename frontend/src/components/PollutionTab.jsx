@@ -1,0 +1,158 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PlusCircle, Calendar } from "lucide-react";
+import api from "@/lib/api";
+import { formatTime } from "@/lib/utils";
+
+export default function PollutionTab({ records, onSuccess, onError }) {
+  const [form, setForm] = useState({ pass: "", fail: "" });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (form.pass === "" || form.fail === "") {
+      onError("पास र फेल संख्या अनिवार्य छ।");
+      return;
+    }
+    try {
+      await api.post("/api/pollution", form);
+      onSuccess("प्रदुषण परीक्षण डाटा सफलतापूर्वक रेकर्ड भयो!");
+      setForm({ pass: "", fail: "" });
+    } catch (err) {
+      onError(err.message);
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Entry Form */}
+      <Card className="lg:col-span-1 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            <PlusCircle className="w-4 h-4 text-amber-600" />
+            नयाँ प्रविष्टि (New Entry)
+          </CardTitle>
+          <CardDescription className="text-xs">
+            दैनिक सवारी प्रदुषण परीक्षण दर्ता गर्नुहोस्
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="pol-pass" className="text-xs font-semibold">
+                पास संख्या (Passed Count)
+              </Label>
+              <Input
+                id="pol-pass"
+                type="number"
+                min="0"
+                required
+                value={form.pass}
+                onChange={(e) => setForm({ ...form, pass: e.target.value })}
+                className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pol-fail" className="text-xs font-semibold">
+                फेल संख्या (Failed Count)
+              </Label>
+              <Input
+                id="pol-fail"
+                type="number"
+                min="0"
+                required
+                value={form.fail}
+                onChange={(e) => setForm({ ...form, fail: e.target.value })}
+                className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
+              />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button
+              type="submit"
+              className="w-full bg-amber-900 hover:bg-amber-800 text-white rounded-md text-sm font-semibold"
+            >
+              सबमिट गर्नुहोस् (Submit)
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+
+      {/* Today's Records Table */}
+      <Card className="lg:col-span-2 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-amber-600" />
+            आजका विवरणहरू (Today&apos;s Records)
+          </CardTitle>
+          <CardDescription className="text-xs">
+            आज दाखिला भएका दर्ता विवरण
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
+              <TableRow>
+                <TableHead className="text-xs">समय (Time)</TableHead>
+                <TableHead className="text-xs">पास (Passed)</TableHead>
+                <TableHead className="text-xs">फेल (Failed)</TableHead>
+                <TableHead className="text-xs">दर्ता गर्ने (Registered By)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {records.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="text-center text-slate-400 py-8 text-xs"
+                  >
+                    आज कुनै रेकर्ड प्रविष्ट गरिएको छैन।
+                  </TableCell>
+                </TableRow>
+              ) : (
+                records.map((row) => (
+                  <TableRow
+                    key={row._id}
+                    className="border-b border-slate-100 dark:border-zinc-900 text-xs"
+                  >
+                    <TableCell className="font-semibold text-slate-500">
+                      {formatTime(row.createdAt)}
+                    </TableCell>
+                    <TableCell className="font-bold text-emerald-600 dark:text-emerald-400">
+                      {row.pass}
+                    </TableCell>
+                    <TableCell className="font-bold text-rose-600 dark:text-rose-400">
+                      {row.fail}
+                    </TableCell>
+                    <TableCell className="text-slate-500">
+                      {row.createdBy?.fullName || "System"}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
