@@ -323,57 +323,53 @@ export default function Home() {
           <Tabs defaultValue="fitness" className="w-full space-y-4">
             <div className="flex flex-col gap-4">
               {/* Tab row 1: original modules */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <TabsList className="bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl w-full md:w-auto flex flex-wrap border border-slate-200 dark:border-zinc-800 gap-1">
-                  <TabsTrigger value="fitness" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 shadow-sm">
+                  <TabsTrigger value="fitness" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm">
                     <Activity className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">सवारी फिटनेस</span>
                   </TabsTrigger>
-                  <TabsTrigger value="routePermit" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 shadow-sm">
+                  <TabsTrigger value="routePermit" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm">
                     <MapPin className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">रुट इजाजत</span>
                   </TabsTrigger>
-                  <TabsTrigger value="roadworthiness" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 shadow-sm">
+                  <TabsTrigger value="roadworthiness" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm">
                     <ClipboardList className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">सडक योग्यता</span>
                   </TabsTrigger>
-                  <TabsTrigger value="pollution" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 shadow-sm">
+                  <TabsTrigger value="pollution" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm">
                     <Wind className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">प्रदुषण परीक्षण</span>
                   </TabsTrigger>
-                  <TabsTrigger value="search" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 shadow-sm">
+                  <TabsTrigger value="search" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm">
                     <Search className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">समय सीमा खोज</span>
                   </TabsTrigger>
                   {isAdmin && (
-                    <TabsTrigger value="userManagement" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 shadow-sm data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-400">
+                    <TabsTrigger value="userManagement" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm data-active:text-emerald-700 dark:data-active:text-emerald-400">
                       <Users className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">प्रयोगकर्ता व्यवस्थापन</span>
                     </TabsTrigger>
                   )}
+                  <TabsTrigger value="mechanicalTest" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-orange-700 dark:data-active:text-orange-400 shadow-sm">
+                    <Wrench className="w-4 h-4 shrink-0" /><span>यान्त्रिक परीक्षण</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="patake" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-rose-700 dark:data-active:text-rose-400 shadow-sm">
+                    <Zap className="w-4 h-4 shrink-0" /><span>पटके</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="starkayam" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-teal-700 dark:data-active:text-teal-400 shadow-sm">
+                    <ShieldCheck className="w-4 h-4 shrink-0" /><span>स्तर कायम</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="monitoring" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-cyan-700 dark:data-active:text-cyan-400 shadow-sm">
+                    <Factory className="w-4 h-4 shrink-0" /><span>कारखाना अनुगमन</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="transportRegistration" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-indigo-700 dark:data-active:text-indigo-400 shadow-sm">
+                    <Bus className="w-4 h-4 shrink-0" /><span>यातायात पञ्जीकरण</span>
+                  </TabsTrigger>
                 </TabsList>
 
                 <button
                   onClick={() => setShowLetterModal(true)}
-                  className="bg-blue-900 hover:bg-blue-800 text-white rounded-xl py-2 px-4 text-xs md:text-sm flex items-center justify-center gap-1.5 font-bold transition shadow-sm border border-transparent self-start md:self-auto cursor-pointer"
+                  className="bg-blue-900 hover:bg-blue-800 text-white rounded-xl py-2 px-4 text-xs md:text-sm flex items-center justify-center gap-1.5 font-bold transition shadow-sm border border-transparent self-start cursor-pointer"
                 >
                   <FileText className="w-4 h-4 shrink-0" />
                   <span>पत्र सिर्जना गर्नुहोस् (Generate Letter)</span>
                 </button>
               </div>
-
-              {/* Tab row 2: new modules */}
-              <TabsList className="bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl w-full md:w-auto flex flex-wrap border border-slate-200 dark:border-zinc-800 gap-1">
-                <TabsTrigger value="mechanicalTest" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-orange-700 dark:data-[state=active]:text-orange-400 shadow-sm">
-                  <Wrench className="w-4 h-4 shrink-0" /><span>यान्त्रिक परीक्षण</span>
-                </TabsTrigger>
-                <TabsTrigger value="patake" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-rose-700 dark:data-[state=active]:text-rose-400 shadow-sm">
-                  <Zap className="w-4 h-4 shrink-0" /><span>पटके</span>
-                </TabsTrigger>
-                <TabsTrigger value="starkayam" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-teal-700 dark:data-[state=active]:text-teal-400 shadow-sm">
-                  <ShieldCheck className="w-4 h-4 shrink-0" /><span>स्तर कायम</span>
-                </TabsTrigger>
-                <TabsTrigger value="monitoring" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-cyan-700 dark:data-[state=active]:text-cyan-400 shadow-sm">
-                  <Factory className="w-4 h-4 shrink-0" /><span>कारखाना अनुगमन</span>
-                </TabsTrigger>
-                <TabsTrigger value="transportRegistration" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-indigo-700 dark:data-[state=active]:text-indigo-400 shadow-sm">
-                  <Bus className="w-4 h-4 shrink-0" /><span>यातायात पञ्जीकरण</span>
-                </TabsTrigger>
-              </TabsList>
             </div>
 
             {/* ── Tab content panels ── */}

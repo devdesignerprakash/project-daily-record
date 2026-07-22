@@ -40,8 +40,9 @@ app.use("/api/patake", patakeRouter); //पटके routes
 app.use("/api/starkayam", starkayamRouter); //स्तर कायम routes
 app.use("/api/monitoring", monitoringRouter); //कारखाना वर्कसप अनुगमन routes
 app.use("/api/transport-registration", transportRegistrationRouter); //यातायात सेवा पञ्जीकरण routes
-app.listen(process.env.PORT, () => {
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
   connectDB();
   seedAdmin();
-  console.log(`Server is running on port ${process.env.PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
