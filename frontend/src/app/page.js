@@ -5,7 +5,7 @@ import api from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Activity, MapPin, ClipboardList, Search, CheckCircle2, AlertCircle,
-  Building, Wind, FileText, Users, Wrench, Zap, ShieldCheck, Factory, Bus
+  Building, Wind, FileText, Users, Wrench, Zap, ShieldCheck, Factory, Bus, CalendarSearch
 } from "lucide-react";
 
 import LoginView                from "@/components/LoginView";
@@ -17,6 +17,7 @@ import RoadworthinessTab        from "@/components/RoadworthinessTab";
 import PollutionTab             from "@/components/PollutionTab";
 import SearchTab                from "@/components/SearchTab";
 import LetterModal              from "@/components/LetterModal";
+import AdminRecordsModal        from "@/components/AdminRecordsModal";
 import UserManagementTab        from "@/components/UserManagementTab";
 import MechanicalTestTab        from "@/components/MechanicalTestTab";
 import PatakeTab                from "@/components/PatakeTab";
@@ -69,6 +70,9 @@ export default function Home() {
 
   // ── Letter Modal ──────────────────────────────────────────────
   const [showLetterModal, setShowLetterModal] = useState(false);
+
+  // ── Admin: all-modules-by-date Modal ────────────────────────────
+  const [showAdminRecordsModal, setShowAdminRecordsModal] = useState(false);
 
   // ── Flash messages ────────────────────────────────────────────
   const [successMsg, setSuccessMsg] = useState("");
@@ -362,13 +366,24 @@ export default function Home() {
                   </TabsTrigger>
                 </TabsList>
 
-                <button
-                  onClick={() => setShowLetterModal(true)}
-                  className="bg-blue-900 hover:bg-blue-800 text-white rounded-xl py-2 px-4 text-xs md:text-sm flex items-center justify-center gap-1.5 font-bold transition shadow-sm border border-transparent self-start cursor-pointer"
-                >
-                  <FileText className="w-4 h-4 shrink-0" />
-                  <span>पत्र सिर्जना गर्नुहोस् (Generate Letter)</span>
-                </button>
+                <div className="flex flex-wrap items-start gap-2 self-start">
+                  <button
+                    onClick={() => setShowLetterModal(true)}
+                    className="bg-blue-900 hover:bg-blue-800 text-white rounded-xl py-2 px-4 text-xs md:text-sm flex items-center justify-center gap-1.5 font-bold transition shadow-sm border border-transparent cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span>पत्र सिर्जना गर्नुहोस् (Generate Letter)</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => setShowAdminRecordsModal(true)}
+                      className="bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl py-2 px-4 text-xs md:text-sm flex items-center justify-center gap-1.5 font-bold transition shadow-sm border border-transparent cursor-pointer"
+                    >
+                      <CalendarSearch className="w-4 h-4 shrink-0" />
+                      <span>मिति अनुसार सबै विवरण (View All Records)</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -444,6 +459,13 @@ export default function Home() {
         onClose={() => setShowLetterModal(false)}
         stats={stats}
       />
+
+      {isAdmin && (
+        <AdminRecordsModal
+          isOpen={showAdminRecordsModal}
+          onClose={() => setShowAdminRecordsModal(false)}
+        />
+      )}
     </div>
   );
 }
