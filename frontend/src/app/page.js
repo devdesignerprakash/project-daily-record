@@ -168,7 +168,7 @@ export default function Home() {
       const starData = await api.get("/api/starkayam/by-date");
       const starList = starData.data || [];
       setRecentStarkayam(starList);
-      const starTotal = starList.reduce((sum, c) => sum + (c.count || 0), 0);
+      const starTotal = starList.reduce((sum, c) => sum + (c.naya || 0) + (c.nabikaran || 0), 0);
       setStats((p) => ({ ...p, starkayam: { total: starTotal } }));
 
       // ── Monitoring ──

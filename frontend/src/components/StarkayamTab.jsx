@@ -25,18 +25,18 @@ import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
 
 export default function StarkayamTab({ records, onSuccess, onError }) {
-  const [form, setForm] = useState({ count: "" });
+  const [form, setForm] = useState({ naya: "", nabikaran: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.count) {
-      onError("स्तर कायम संख्या अनिवार्य छ।");
+    if (!form.naya || !form.nabikaran) {
+      onError("नयाँ र नवीकरण संख्या अनिवार्य छ।");
       return;
     }
     try {
       await api.post("/api/starkayam", form);
       onSuccess("स्तर कायम डाटा सफलतापूर्वक रेकर्ड भयो!");
-      setForm({ count: "" });
+      setForm({ naya: "", nabikaran: "" });
     } catch (err) {
       onError(err.message);
     }
@@ -58,18 +58,31 @@ export default function StarkayamTab({ records, onSuccess, onError }) {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="starkayam-count" className="text-xs font-semibold">
-                स्तर कायम संख्या (Count)
+              <Label htmlFor="starkayam-naya" className="text-xs font-semibold">
+                नयाँ (New Count)
               </Label>
               <Input
-                id="starkayam-count"
+                id="starkayam-naya"
                 type="number"
                 min="0"
                 required
-                value={form.count}
-                onChange={(e) => setForm({ ...form, count: e.target.value })}
+                value={form.naya}
+                onChange={(e) => setForm({ ...form, naya: e.target.value })}
                 className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
-                placeholder="संख्या प्रविष्ट गर्नुहोस्"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="starkayam-nabikaran" className="text-xs font-semibold">
+                नवीकरण (Renewal Count)
+              </Label>
+              <Input
+                id="starkayam-nabikaran"
+                type="number"
+                min="0"
+                required
+                value={form.nabikaran}
+                onChange={(e) => setForm({ ...form, nabikaran: e.target.value })}
+                className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
               />
             </div>
           </CardContent>
@@ -100,7 +113,8 @@ export default function StarkayamTab({ records, onSuccess, onError }) {
             <TableHeader className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
               <TableRow>
                 <TableHead className="text-xs">समय (Time)</TableHead>
-                <TableHead className="text-xs">स्तर कायम संख्या</TableHead>
+                <TableHead className="text-xs">नयाँ</TableHead>
+                <TableHead className="text-xs">नवीकरण</TableHead>
                 <TableHead className="text-xs">दर्ता गर्ने</TableHead>
               </TableRow>
             </TableHeader>
@@ -108,7 +122,7 @@ export default function StarkayamTab({ records, onSuccess, onError }) {
               {records.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={3}
+                    colSpan={4}
                     className="text-center text-slate-400 py-8 text-xs"
                   >
                     आज कुनै रेकर्ड प्रविष्ट गरिएको छैन।
@@ -124,7 +138,10 @@ export default function StarkayamTab({ records, onSuccess, onError }) {
                       {formatTime(row.createdAt)}
                     </TableCell>
                     <TableCell className="font-bold text-teal-900 dark:text-teal-400">
-                      {row.count}
+                      {row.naya}
+                    </TableCell>
+                    <TableCell className="font-bold text-teal-900 dark:text-teal-400">
+                      {row.nabikaran}
                     </TableCell>
                     <TableCell className="text-slate-500">
                       {row.createdBy?.fullName || "System"}

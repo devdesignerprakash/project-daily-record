@@ -1,7 +1,11 @@
 import mongoose from 'mongoose';
 
 const starkayamSchema = new mongoose.Schema({
-    count: {
+    naya: {
+        type: Number,
+        required: true
+    },
+    nabikaran: {
         type: Number,
         required: true
     },

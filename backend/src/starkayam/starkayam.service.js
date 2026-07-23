@@ -4,7 +4,8 @@ import Starkayam from './starkayam.schema.js';
 class StarkayamService {
     static async createStarkayamData(data) {
         try {
-            data.count = Number(data.count);
+            data.naya = Number(data.naya);
+            data.nabikaran = Number(data.nabikaran);
             let created = await Starkayam.create(data);
             created = await created.populate('createdBy', 'fullName email designation userType');
             return created;

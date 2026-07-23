@@ -12,7 +12,7 @@ export default function Navbar({ user, onLogout }) {
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-12 shrink-0">
             <Image
-              src="/logo.png"
+              src="/emblem.png"
               alt="Emblem of Nepal"
               fill
               sizes="48px"

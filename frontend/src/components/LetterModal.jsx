@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { X, Printer, RefreshCw, Pencil } from "lucide-react";
+import { X, Printer, RefreshCw, Pencil, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
+import * as XLSX from "xlsx";
 
 // ── helper: sum a field across an array ──────────────────────────
 const sumField = (arr, field) => (arr || []).reduce((s, r) => s + (Number(r[field]) || 0), 0);
@@ -12,6 +13,9 @@ const sumField = (arr, field) => (arr || []).reduce((s, r) => s + (Number(r[fiel
 export default function LetterModal({ isOpen, onClose }) {
   // ── editable header fields ────────────────────────────────────
   const [miti,              setMiti]              = useState("२०८३/०४/०४");
+  const [neSambat,          setNeSambat]          = useState("");
+  const [officeName,        setOfficeName]        = useState("सवारी परीक्षण कार्यालय टेकु,");
+  const [timeNote,          setTimeNote]          = useState("(दिउँसो १:३० सम्म)");
   const [signerName,        setSignerName]        = useState("निर्मला खनाल दाहाल");
   const [signerDesignation, setSignerDesignation] = useState("शाखा अधिकृत");
 
@@ -97,8 +101,8 @@ export default function LetterModal({ isOpen, onClose }) {
         },
         {
           sn: "८", name: "स्तर कायम",
-          naya:      sumField(starList, "count"),
-          nabikaran: 0,
+          naya:      sumField(starList, "naya"),
+          nabikaran: sumField(starList, "nabikaran"),
         },
         {
           sn: "९", name: "कारखाना वर्कसप / सवारी परीक्षण केन्द्रमा अनुगमन",
@@ -140,14 +144,44 @@ export default function LetterModal({ isOpen, onClose }) {
   const totalNabikaran = rows.reduce((s, r) => s + (r.nabikaran || 0), 0);
   const grandTotal     = totalNaya + totalNabikaran;
 
+  // ── download table as Excel (same layout as the letter table) ─
+  const downloadExcel = () => {
+    const titleLine = `${officeName} मिति ${miti} ने.सं. ${neSambat} ${timeNote}`;
+
+    const aoa = [
+      ["सि.नं.", "क्रियाकलाप/विवरण (संख्या)", titleLine, "", ""],
+      ["", "", "नयाँ", "नवीकरण", "जम्मा"],
+      ...rows.map((row) => [
+        row.sn,
+        row.name,
+        row.naya || 0,
+        row.nabikaran || 0,
+        (row.naya || 0) + (row.nabikaran || 0),
+      ]),
+      ["", "जम्मा", totalNaya, totalNabikaran, grandTotal],
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // सि.नं.
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, // क्रियाकलाप/विवरण
+      { s: { r: 0, c: 2 }, e: { r: 0, c: 4 } }, // title spans नयाँ/नवीकरण/जम्मा
+    ];
+    ws["!cols"] = [{ wch: 6 }, { wch: 40 }, { wch: 12 }, { wch: 12 }, { wch: 10 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "तपसिल");
+    XLSX.writeFile(wb, `letter-tapasil-${miti.replace(/\//g, "-")}.xlsx`);
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
+    <div id="letter-modal-overlay" className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div id="letter-modal-card" className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
 
         {/* ── Modal Header ── */}
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex justify-between items-center bg-slate-50 dark:bg-zinc-900/50 rounded-t-2xl">
+        <div className="no-print px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex justify-between items-center bg-slate-50 dark:bg-zinc-900/50 rounded-t-2xl">
           <div>
             <h2 className="text-base font-bold text-slate-800 dark:text-zinc-100 flex items-center gap-2">
               <Pencil className="w-4 h-4 text-blue-600" />
@@ -177,13 +211,13 @@ export default function LetterModal({ isOpen, onClose }) {
 
         {/* ── Fetch error banner ── */}
         {fetchError && (
-          <div className="mx-6 mt-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+          <div className="no-print mx-6 mt-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
             ⚠ {fetchError}
           </div>
         )}
 
         {/* ── Document Preview ── */}
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-100 dark:bg-zinc-950 flex justify-center">
+        <div id="letter-preview-wrapper" className="flex-1 overflow-y-auto p-6 bg-slate-100 dark:bg-zinc-950 flex justify-center">
           <div
             id="printable-letter"
             className="bg-white text-slate-900 shadow-md w-full max-w-[21cm] min-h-[29.7cm] border border-slate-200 rounded-md"
@@ -215,6 +249,16 @@ export default function LetterModal({ isOpen, onClose }) {
                     type="text"
                     value={miti}
                     onChange={(e) => setMiti(e.target.value)}
+                    className="border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0 w-32 text-right bg-transparent outline-none font-semibold no-print-border"
+                    style={{ fontFamily: "inherit" }}
+                  />
+                </div>
+                <div className="flex items-center gap-1 justify-end">
+                  <span className="font-semibold">ने.सं.:</span>
+                  <input
+                    type="text"
+                    value={neSambat}
+                    onChange={(e) => setNeSambat(e.target.value)}
                     className="border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0 w-32 text-right bg-transparent outline-none font-semibold no-print-border"
                     style={{ fontFamily: "inherit" }}
                   />
@@ -271,7 +315,30 @@ export default function LetterModal({ isOpen, onClose }) {
                       className="border border-slate-800 py-1 px-2 text-center font-bold"
                       colSpan={3}
                     >
-                      सवारी परीक्षण कार्यालय टेकु, मिति {miti} (दिउँसो १:३० सम्म)
+                      <span className="inline-flex flex-wrap items-center justify-center gap-x-1">
+                        <input
+                          type="text"
+                          value={officeName}
+                          onChange={(e) => setOfficeName(e.target.value)}
+                          className="inline w-44 text-center bg-transparent outline-none border-b border-dashed border-transparent hover:border-slate-300 focus:border-blue-400 font-bold no-print-border transition-colors"
+                          style={{ fontFamily: "inherit", fontSize: "inherit" }}
+                        />
+                        <span>मिति</span>
+                        <input
+                          type="text"
+                          value={miti}
+                          onChange={(e) => setMiti(e.target.value)}
+                          className="inline w-24 text-center bg-transparent outline-none border-b border-dashed border-transparent hover:border-slate-300 focus:border-blue-400 font-bold no-print-border transition-colors"
+                          style={{ fontFamily: "inherit", fontSize: "inherit" }}
+                        />
+                        <input
+                          type="text"
+                          value={timeNote}
+                          onChange={(e) => setTimeNote(e.target.value)}
+                          className="inline w-40 text-center bg-transparent outline-none border-b border-dashed border-transparent hover:border-slate-300 focus:border-blue-400 font-bold no-print-border transition-colors"
+                          style={{ fontFamily: "inherit", fontSize: "inherit" }}
+                        />
+                      </span>
                     </th>
                   </tr>
                   <tr className="bg-slate-50">
@@ -297,27 +364,13 @@ export default function LetterModal({ isOpen, onClose }) {
                           style={{ fontFamily: "inherit", fontSize: "inherit" }}
                         />
                       </td>
-                      {/* नयाँ — editable */}
-                      <td className="border border-slate-800 py-1 px-1 text-center">
-                        <input
-                          type="number"
-                          min="0"
-                          value={row.naya}
-                          onChange={(e) => updateRow(idx, "naya", e.target.value)}
-                          className="w-16 text-center bg-transparent outline-none border-b border-dashed border-transparent hover:border-slate-300 focus:border-blue-400 font-semibold text-slate-800 no-print-border transition-colors"
-                          style={{ fontFamily: "inherit", fontSize: "inherit" }}
-                        />
+                      {/* नयाँ — data only */}
+                      <td className="border border-slate-800 py-1 px-2 text-center font-semibold text-slate-800">
+                        {row.naya || 0}
                       </td>
-                      {/* नवीकरण — editable */}
-                      <td className="border border-slate-800 py-1 px-1 text-center">
-                        <input
-                          type="number"
-                          min="0"
-                          value={row.nabikaran}
-                          onChange={(e) => updateRow(idx, "nabikaran", e.target.value)}
-                          className="w-16 text-center bg-transparent outline-none border-b border-dashed border-transparent hover:border-slate-300 focus:border-blue-400 font-semibold text-slate-800 no-print-border transition-colors"
-                          style={{ fontFamily: "inherit", fontSize: "inherit" }}
-                        />
+                      {/* नवीकरण — data only */}
+                      <td className="border border-slate-800 py-1 px-2 text-center font-semibold text-slate-800">
+                        {row.nabikaran || 0}
                       </td>
                       {/* जम्मा — computed */}
                       <td className="border border-slate-800 py-1 px-2 text-center font-bold text-slate-900 bg-slate-50/30">
@@ -347,29 +400,31 @@ export default function LetterModal({ isOpen, onClose }) {
             {/* ═══════════════════════════════════════
                 SIGNATURE
             ═══════════════════════════════════════ */}
-            <div className="px-10 pb-10 flex flex-col items-end">
-              <div className="h-12 w-40" />
-              <input
-                type="text"
-                value={signerName}
-                onChange={(e) => setSignerName(e.target.value)}
-                className="border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0.5 w-44 text-center font-bold text-slate-800 bg-transparent outline-none text-xs no-print-border"
-                style={{ fontFamily: "inherit" }}
-              />
-              <input
-                type="text"
-                value={signerDesignation}
-                onChange={(e) => setSignerDesignation(e.target.value)}
-                className="border-b border-dashed border-slate-300 focus:border-blue-400 px-1 py-0.5 w-44 text-center text-slate-500 bg-transparent outline-none text-[11px] mt-0.5 no-print-border"
-                style={{ fontFamily: "inherit" }}
-              />
+            <div className="px-10 pb-10">
+              <div className="ml-auto flex flex-col items-end w-44">
+                <div className="h-12 w-40" />
+                <input
+                  type="text"
+                  value={signerName}
+                  onChange={(e) => setSignerName(e.target.value)}
+                  className="border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0.5 w-44 text-center font-bold text-slate-800 bg-transparent outline-none text-xs no-print-border"
+                  style={{ fontFamily: "inherit" }}
+                />
+                <input
+                  type="text"
+                  value={signerDesignation}
+                  onChange={(e) => setSignerDesignation(e.target.value)}
+                  className="border-b border-dashed border-slate-300 focus:border-blue-400 px-1 py-0.5 w-44 text-center text-slate-500 bg-transparent outline-none text-[11px] mt-0.5 no-print-border"
+                  style={{ fontFamily: "inherit" }}
+                />
+              </div>
             </div>
 
           </div>
         </div>
 
         {/* ── Modal Footer ── */}
-        <div className="px-6 py-4 border-t border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/50 flex justify-between items-center gap-3 rounded-b-2xl">
+        <div className="no-print px-6 py-4 border-t border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/50 flex justify-between items-center gap-3 rounded-b-2xl">
           <Button
             variant="outline"
             onClick={fetchAllData}
@@ -389,6 +444,14 @@ export default function LetterModal({ isOpen, onClose }) {
               रद्द गर्नुहोस् (Cancel)
             </Button>
             <Button
+              variant="outline"
+              onClick={downloadExcel}
+              className="text-xs md:text-sm border-green-200 text-green-700 dark:border-green-800 dark:text-green-400 flex items-center gap-1.5"
+            >
+              <FileSpreadsheet className="w-4 h-4 shrink-0" />
+              एक्सेल डाउनलोड (Download Excel)
+            </Button>
+            <Button
               onClick={() => window.print()}
               className="bg-blue-900 hover:bg-blue-800 text-white rounded-lg flex items-center gap-1.5 shadow-sm text-xs md:text-sm font-semibold"
             >
@@ -402,10 +465,67 @@ export default function LetterModal({ isOpen, onClose }) {
       {/* ── Print styles ── */}
       <style jsx global>{`
         @media print {
-          body > *:not(#__next) { display: none !important; }
-          #printable-letter { display: block !important; box-shadow: none !important; border: none !important; }
+          @page { size: A4; margin: 10mm; }
+
+          /* Hide the rest of the app — printing only the letter itself.
+             (position:fixed/sticky ancestors get repeated on every printed
+             page by the browser, so the whole overlay chain is reset to
+             normal static flow instead of relying on visibility tricks.) */
+          header, main { display: none !important; }
           .no-print { display: none !important; }
           .no-print-border { border: none !important; }
+
+          #letter-modal-overlay {
+            position: static !important;
+            inset: auto !important;
+            background: none !important;
+            backdrop-filter: none !important;
+            padding: 0 !important;
+            display: block !important;
+            overflow: visible !important;
+            z-index: auto !important;
+          }
+          #letter-modal-card {
+            display: block !important;
+            width: auto !important;
+            max-width: none !important;
+            max-height: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+          }
+          #letter-preview-wrapper {
+            display: block !important;
+            padding: 0 !important;
+            background: none !important;
+            overflow: visible !important;
+          }
+          #printable-letter {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+
+          /* ── compact spacing so the letter fits a single printed page ── */
+          #printable-letter .letterhead-img-wrapper { height: 130px !important; }
+          #printable-letter .px-10 { padding-left: 26px !important; padding-right: 26px !important; }
+          #printable-letter .pb-10 { padding-bottom: 16px !important; }
+          #printable-letter .pb-8 { padding-bottom: 12px !important; }
+          #printable-letter .pb-4 { padding-bottom: 8px !important; }
+          #printable-letter .pb-3 { padding-bottom: 6px !important; }
+          #printable-letter .pt-2 { padding-top: 4px !important; }
+          #printable-letter .pt-1 { padding-top: 2px !important; }
+          #printable-letter .pb-2 { padding-bottom: 4px !important; }
+          #printable-letter .leading-loose { line-height: 1.35 !important; }
+          #printable-letter .leading-relaxed { line-height: 1.3 !important; }
+          #printable-letter table th,
+          #printable-letter table td { padding-top: 2px !important; padding-bottom: 2px !important; }
+          #printable-letter table { page-break-inside: avoid; break-inside: avoid; }
+          #printable-letter > div:last-child { page-break-inside: avoid; break-inside: avoid; }
         }
       `}</style>
     </div>
