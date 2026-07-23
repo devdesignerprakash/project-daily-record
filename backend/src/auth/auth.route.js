@@ -6,6 +6,8 @@ import verifyToken from '../middleware/verifyToken.js'
 const authRouter=express.Router()
 authRouter.post('/login',AuthController.login)
 authRouter.post('/register',verifyToken,authorizedUser('admin'),AuthController.register)
+authRouter.get('/me',verifyToken,AuthController.me)
+authRouter.post('/logout',verifyToken,AuthController.logout)
 
 
 export default authRouter

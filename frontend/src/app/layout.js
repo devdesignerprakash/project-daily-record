@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import StoreProvider from "@/lib/store/StoreProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "सवारी परीक्षण कार्यालय | Vehicle Fitness Test Office",
   description: "सवारी परीक्षण कार्यालय - सवारी फिटनेस, रुट इजाजत, र सडक योग्यता प्रणाली",
+  icons: {
+    icon: "/emblem.png",
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -23,7 +27,9 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body suppressHydrationWarning className="min-h-full flex flex-col bg-zinc-50/50 dark:bg-zinc-950">{children}</body>
+      <body suppressHydrationWarning className="min-h-full flex flex-col bg-zinc-50/50 dark:bg-zinc-950">
+        <StoreProvider>{children}</StoreProvider>
+      </body>
     </html>
   );
 }

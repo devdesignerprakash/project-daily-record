@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import api from "@/lib/api";
+import { fetchCurrentUser, loginUser, logoutUser } from "@/lib/store/authSlice";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Activity, MapPin, ClipboardList, Search, CheckCircle2, AlertCircle,
@@ -25,11 +27,6 @@ import StarkayamTab             from "@/components/StarkayamTab";
 import MonitoringTab            from "@/components/MonitoringTab";
 import TransportRegistrationTab from "@/components/TransportRegistrationTab";
 
-const emptySubscribe = () => () => {};
-function useIsMounted() {
-  return useSyncExternalStore(emptySubscribe, () => true, () => false);
-}
-
 // ---------- initial stats shape ----------
 const EMPTY_STATS = {
   fitness:               { naya: 0, nabikaran: 0, pratilipi: 0, total: 0 },
@@ -44,29 +41,18 @@ const EMPTY_STATS = {
 };
 
 export default function Home() {
-  const mounted = useIsMounted();
-  const [user, setUser] = useState(null);
-  const [loginEmail,    setLoginEmail]    = useState("vftcteku@gmail.com");
-  const [loginPassword, setLoginPassword] = useState("Vftcadmin@123");
+  const dispatch = useDispatch();
+  const user        = useSelector((state) => state.auth.user);
+  const initialized = useSelector((state) => state.auth.initialized);
+  const [loginEmail,    setLoginEmail]    = useState("john@example.com");
+  const [loginPassword, setLoginPassword] = useState("");
   const [authError,     setAuthError]     = useState("");
   const [authLoading,   setAuthLoading]   = useState(false);
 
-  // ── Restore session on client mount only ──
+  // ── Restore session on mount via the httpOnly cookie (no browser storage) ──
   useEffect(() => {
-    let active = true;
-    requestAnimationFrame(() => {
-      if (!active) return;
-      try {
-        const saved = localStorage.getItem("vftc_user");
-        if (saved) setUser(JSON.parse(saved));
-      } catch {
-        localStorage.removeItem("vftc_user");
-      }
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
+    dispatch(fetchCurrentUser());
+  }, [dispatch]);
 
   // ── Letter Modal ──────────────────────────────────────────────
   const [showLetterModal, setShowLetterModal] = useState(false);
@@ -235,15 +221,10 @@ export default function Home() {
     setAuthLoading(true);
     setAuthError("");
     try {
-      const data = await api.post("/api/auth/login", {
-        email: loginEmail,
-        password: loginPassword,
-      });
-      setUser(data.user);
-      localStorage.setItem("vftc_user", JSON.stringify(data.user));
+      await dispatch(loginUser({ email: loginEmail, password: loginPassword })).unwrap();
       showSuccess("सफलतापूर्वक लगइन भयो!");
     } catch (err) {
-      setAuthError(err.message);
+      setAuthError(typeof err === "string" ? err : err?.message || "लगइन असफल भयो।");
     } finally {
       setAuthLoading(false);
     }
@@ -251,9 +232,7 @@ export default function Home() {
 
   // ── Logout ────────────────────────────────────────────────────
   const handleLogout = () => {
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    localStorage.removeItem("vftc_user");
-    setUser(null);
+    dispatch(logoutUser());
     setStats(EMPTY_STATS);
     setRecentFitness([]);
     setRecentRoutePermits([]);
@@ -272,7 +251,7 @@ export default function Home() {
   // ──────────────────────────────────────────────────────────────
   // RENDER: login screen
   // ──────────────────────────────────────────────────────────────
-  if (!mounted) {
+  if (!initialized) {
     return <div className="min-h-screen bg-slate-50 dark:bg-zinc-950" />;
   }
 

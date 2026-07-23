@@ -34,7 +34,7 @@ export default function LoginView({
             <div className="flex justify-center">
               <div className="relative w-28 h-28 drop-shadow-xl animate-pulse">
                 <Image
-                  src="/logo.png"
+                  src="/emblem.png"
                   alt="Emblem of Nepal"
                   fill
                   sizes="112px"
