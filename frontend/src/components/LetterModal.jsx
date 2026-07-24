@@ -36,6 +36,21 @@ export default function LetterModal({ isOpen, onClose }) {
     { sn: "९", name: "कारखाना वर्कसप / सवारी परीक्षण केन्द्रमा अनुगमन",        naya: 0, nabikaran: 0 },
   ]);
 
+  // ── fetch नेपाल संवत date from vftc.gov.np ─────────────────────
+  const [sambatLoading, setSambatLoading] = useState(false);
+  const fetchNeSambat = useCallback(async () => {
+    setSambatLoading(true);
+    try {
+      const res = await api.get("/api/nepali-date/sambat");
+      if (res?.neSambat) setNeSambat(res.neSambat);
+      if (res?.miti) setMiti(res.miti);
+    } catch {
+      // silent — user can still type it manually
+    } finally {
+      setSambatLoading(false);
+    }
+  }, []);
+
   // ── fetch from all APIs ───────────────────────────────────────
   const fetchAllData = useCallback(async () => {
     setLoading(true);
@@ -52,6 +67,7 @@ export default function LetterModal({ isOpen, onClose }) {
         api.get("/api/monitoring/by-date"),
         api.get("/api/transport-registration/by-date"),
       ]);
+      void fetchNeSambat();
 
       const fitList  = fitRes.data  || [];
       const rpList   = rpRes.data   || [];
@@ -115,7 +131,7 @@ export default function LetterModal({ isOpen, onClose }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchNeSambat]);
 
   // Fetch whenever modal opens
   useEffect(() => {
@@ -249,6 +265,7 @@ export default function LetterModal({ isOpen, onClose }) {
                     type="text"
                     value={miti}
                     onChange={(e) => setMiti(e.target.value)}
+                    placeholder={sambatLoading ? "ल्याइँदैछ…" : ""}
                     className="border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0 w-32 text-right bg-transparent outline-none font-semibold no-print-border"
                     style={{ fontFamily: "inherit" }}
                   />
@@ -259,9 +276,19 @@ export default function LetterModal({ isOpen, onClose }) {
                     type="text"
                     value={neSambat}
                     onChange={(e) => setNeSambat(e.target.value)}
+                    placeholder={sambatLoading ? "ल्याइँदैछ…" : ""}
                     className="border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0 w-32 text-right bg-transparent outline-none font-semibold no-print-border"
                     style={{ fontFamily: "inherit" }}
                   />
+                  <button
+                    type="button"
+                    onClick={fetchNeSambat}
+                    disabled={sambatLoading}
+                    title="वि.सं. मिति र नेपाल संवत मिति पुन: ल्याउनुहोस्"
+                    className="no-print p-0.5 rounded hover:bg-blue-100 text-blue-600 transition disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${sambatLoading ? "animate-spin" : ""}`} />
+                  </button>
                 </div>
               </div>
             </div>

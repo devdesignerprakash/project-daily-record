@@ -16,6 +16,7 @@ import starkayamRouter from "./starkayam/starkayam.route.js";
 import monitoringRouter from "./monitoring/monitoring.route.js";
 import transportRegistrationRouter from "./transportRegistration/transportRegistration.route.js";
 import adminRouter from "./admin/admin.route.js";
+import nepaliDateRouter from "./nepaliDate/nepaliDate.route.js";
 dotenv.config();
 const app = express();
 app.use(express.json()); //json data
@@ -42,6 +43,7 @@ app.use("/api/starkayam", starkayamRouter); //स्तर कायम routes
 app.use("/api/monitoring", monitoringRouter); //कारखाना वर्कसप अनुगमन routes
 app.use("/api/transport-registration", transportRegistrationRouter); //यातायात सेवा पञ्जीकरण routes
 app.use("/api/admin", adminRouter); //admin cross-module routes
+app.use("/api/nepali-date", nepaliDateRouter); //नेपाल संवत मिति routes
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   connectDB();
