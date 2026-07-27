@@ -15,6 +15,43 @@ class PollutionService {
     }
   }
 
+  static async updatePollutionData(id, data) {
+    try {
+      if (data?.pass !== undefined) data.pass = Number(data.pass);
+      if (data?.fail !== undefined) data.fail = Number(data.fail);
+      const updated = await Pollution.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+        .populate('createdBy', 'fullName email designation userType');
+      if (!updated) {
+        throw new Error("Pollution record not found");
+      }
+      return updated;
+    } catch (error) {
+      console.error("Error updating pollution data:", error);
+      throw error;
+    }
+  }
+
+  static async getPollutionDataByDateRange(startDateString, endDateString) {
+    try {
+      const startDate = startDateString ? new Date(startDateString) : new Date();
+      const endDate = endDateString ? new Date(endDateString) : new Date();
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new Error("Invalid date format. Expected YYYY-MM-DD.");
+      }
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+      const endExclusive = new Date(endDate);
+      endExclusive.setDate(endExclusive.getDate() + 1);
+
+      return await Pollution.find({
+        createdAt: { $gte: startDate, $lt: endExclusive },
+      }).populate('createdBy', 'fullName email designation userType');
+    } catch (error) {
+      console.error("Error fetching pollution data by date range:", error);
+      throw error;
+    }
+  }
+
   static async getPollutionDataByTimeRange(startTime, endTime) {
     try {
       startTime = convertToDate(startTime);

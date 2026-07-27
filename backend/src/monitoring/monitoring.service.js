@@ -15,6 +15,22 @@ class MonitoringService {
         }
     }
 
+    static async updateMonitoringData(id, data) {
+        try {
+            if (data?.naya !== undefined) data.naya = Number(data.naya);
+            if (data?.nabikaran !== undefined) data.nabikaran = Number(data.nabikaran);
+            const updated = await Monitoring.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+                .populate('createdBy', 'fullName email designation userType');
+            if (!updated) {
+                throw new Error("Monitoring record not found");
+            }
+            return updated;
+        } catch (error) {
+            console.error('Error updating monitoring data:', error);
+            throw error;
+        }
+    }
+
     static async getMonitoringDataByDate(dateString) {
         try {
             const date = dateString ? new Date(dateString) : new Date();
@@ -27,6 +43,24 @@ class MonitoringService {
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
             console.error('Error fetching monitoring data by date:', error);
+            throw error;
+        }
+    }
+
+    static async getMonitoringDataByDateRange(startDateString, endDateString) {
+        try {
+            const startDate = startDateString ? new Date(startDateString) : new Date();
+            const endDate = endDateString ? new Date(endDateString) : new Date();
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) throw new Error('Invalid date format.');
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+            const endExclusive = new Date(endDate);
+            endExclusive.setDate(endExclusive.getDate() + 1);
+            return await Monitoring.find({
+                createdAt: { $gte: startDate, $lt: endExclusive }
+            }).populate('createdBy', 'fullName email designation userType');
+        } catch (error) {
+            console.error('Error fetching monitoring data by date range:', error);
             throw error;
         }
     }

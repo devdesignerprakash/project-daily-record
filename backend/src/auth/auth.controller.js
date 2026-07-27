@@ -15,7 +15,7 @@ class AuthController{
         try{
             const {email,password}=req.body
             const user=await AuthService.login(email,password)
-            const payload={id:user?._id,email:user?.email, role:user?.userType}
+            const payload={id:user?._id,email:user?.email, role:user?.userType, allowedModules:user?.allowedModules}
             const token= generateToken(payload)
             res.cookie('token',token,COOKIE_OPTIONS)
             res.status(200).json({message:'Login successful',user: stripPassword(user)})

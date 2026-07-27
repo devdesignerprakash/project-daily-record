@@ -20,12 +20,14 @@ import PollutionTab             from "@/components/PollutionTab";
 import SearchTab                from "@/components/SearchTab";
 import LetterModal              from "@/components/LetterModal";
 import AdminRecordsModal        from "@/components/AdminRecordsModal";
+import ModuleRecordsModal       from "@/components/ModuleRecordsModal";
 import UserManagementTab        from "@/components/UserManagementTab";
 import MechanicalTestTab        from "@/components/MechanicalTestTab";
 import PatakeTab                from "@/components/PatakeTab";
 import StarkayamTab             from "@/components/StarkayamTab";
 import MonitoringTab            from "@/components/MonitoringTab";
 import TransportRegistrationTab from "@/components/TransportRegistrationTab";
+import { MODULE_KEYS }          from "@/lib/modules";
 
 // ---------- initial stats shape ----------
 const EMPTY_STATS = {
@@ -59,6 +61,9 @@ export default function Home() {
 
   // ── Admin: all-modules-by-date Modal ────────────────────────────
   const [showAdminRecordsModal, setShowAdminRecordsModal] = useState(false);
+
+  // ── KPI drill-down: which module's record list is open (or null) ──
+  const [activeModuleKpi, setActiveModuleKpi] = useState(null);
 
   // ── Flash messages ────────────────────────────────────────────
   const [successMsg, setSuccessMsg] = useState("");
@@ -273,6 +278,14 @@ export default function Home() {
   // RENDER: dashboard
   // ──────────────────────────────────────────────────────────────
   const isAdmin = user?.userType === 'admin';
+  // Admins always see every module; legacy accounts (created before this
+  // field existed) have no allowedModules stored, so default them to all too.
+  const allowedModules = isAdmin || !Array.isArray(user?.allowedModules)
+    ? MODULE_KEYS
+    : user.allowedModules;
+  const hasModule = (key) => allowedModules.includes(key);
+  const defaultTab = MODULE_KEYS.find(hasModule) || "search";
+  const canPrintLetter = isAdmin || user?.canPrintLetter !== false;
   // Total tab count for grid columns
   const tabCount = isAdmin ? 11 : 10;
 
@@ -299,28 +312,36 @@ export default function Home() {
         )}
 
         {/* ── Stats cards ── */}
-        <StatsGrid stats={stats} />
+        <StatsGrid stats={stats} onSelectModule={setActiveModuleKpi} />
 
         {/* ── Module Tabs ── */}
         <section>
-          <Tabs defaultValue="fitness" className="w-full space-y-4">
+          <Tabs defaultValue={defaultTab} className="w-full space-y-4">
             <div className="flex flex-col gap-4">
               {/* Tab row 1: original modules */}
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <TabsList className="bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl w-full md:w-auto flex flex-wrap border border-slate-200 dark:border-zinc-800 gap-1">
-                  <TabsTrigger value="fitness" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm">
-                    <Activity className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">सवारी फिटनेस</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="routePermit" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm">
-                    <MapPin className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">रुट इजाजत</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="roadworthiness" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm">
-                    <ClipboardList className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">सडक योग्यता</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="pollution" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm">
-                    <Wind className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">प्रदुषण परीक्षण</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="search" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm">
+                  {hasModule("fitness") && (
+                    <TabsTrigger value="fitness" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-blue-700 dark:data-active:text-blue-400 shadow-sm">
+                      <Activity className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">सवारी फिटनेस</span>
+                    </TabsTrigger>
+                  )}
+                  {hasModule("routePermit") && (
+                    <TabsTrigger value="routePermit" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-emerald-700 dark:data-active:text-emerald-400 shadow-sm">
+                      <MapPin className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">रुट इजाजत</span>
+                    </TabsTrigger>
+                  )}
+                  {hasModule("roadworthiness") && (
+                    <TabsTrigger value="roadworthiness" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-purple-700 dark:data-active:text-purple-400 shadow-sm">
+                      <ClipboardList className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">सडक योग्यता</span>
+                    </TabsTrigger>
+                  )}
+                  {hasModule("pollution") && (
+                    <TabsTrigger value="pollution" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-amber-700 dark:data-active:text-amber-400 shadow-sm">
+                      <Wind className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">प्रदुषण परीक्षण</span>
+                    </TabsTrigger>
+                  )}
+                  <TabsTrigger value="search" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-sky-700 dark:data-active:text-sky-400 shadow-sm">
                     <Search className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">समय सीमा खोज</span>
                   </TabsTrigger>
                   {isAdmin && (
@@ -328,31 +349,43 @@ export default function Home() {
                       <Users className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">प्रयोगकर्ता व्यवस्थापन</span>
                     </TabsTrigger>
                   )}
-                  <TabsTrigger value="mechanicalTest" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-orange-700 dark:data-active:text-orange-400 shadow-sm">
-                    <Wrench className="w-4 h-4 shrink-0" /><span>यान्त्रिक परीक्षण</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="patake" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-rose-700 dark:data-active:text-rose-400 shadow-sm">
-                    <Zap className="w-4 h-4 shrink-0" /><span>पटके</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="starkayam" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-teal-700 dark:data-active:text-teal-400 shadow-sm">
-                    <ShieldCheck className="w-4 h-4 shrink-0" /><span>स्तर कायम</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="monitoring" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-cyan-700 dark:data-active:text-cyan-400 shadow-sm">
-                    <Factory className="w-4 h-4 shrink-0" /><span>कारखाना अनुगमन</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="transportRegistration" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-indigo-700 dark:data-active:text-indigo-400 shadow-sm">
-                    <Bus className="w-4 h-4 shrink-0" /><span>यातायात पञ्जीकरण</span>
-                  </TabsTrigger>
+                  {hasModule("mechanicalTest") && (
+                    <TabsTrigger value="mechanicalTest" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-orange-700 dark:data-active:text-orange-400 shadow-sm">
+                      <Wrench className="w-4 h-4 shrink-0" /><span>यान्त्रिक परीक्षण</span>
+                    </TabsTrigger>
+                  )}
+                  {hasModule("patake") && (
+                    <TabsTrigger value="patake" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-rose-700 dark:data-active:text-rose-400 shadow-sm">
+                      <Zap className="w-4 h-4 shrink-0" /><span>पटके</span>
+                    </TabsTrigger>
+                  )}
+                  {hasModule("starkayam") && (
+                    <TabsTrigger value="starkayam" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-teal-700 dark:data-active:text-teal-400 shadow-sm">
+                      <ShieldCheck className="w-4 h-4 shrink-0" /><span>स्तर कायम</span>
+                    </TabsTrigger>
+                  )}
+                  {hasModule("monitoring") && (
+                    <TabsTrigger value="monitoring" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-cyan-700 dark:data-active:text-cyan-400 shadow-sm">
+                      <Factory className="w-4 h-4 shrink-0" /><span>कारखाना अनुगमन</span>
+                    </TabsTrigger>
+                  )}
+                  {hasModule("transportRegistration") && (
+                    <TabsTrigger value="transportRegistration" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-indigo-700 dark:data-active:text-indigo-400 shadow-sm">
+                      <Bus className="w-4 h-4 shrink-0" /><span>यातायात पञ्जीकरण</span>
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 <div className="flex flex-wrap items-start gap-2 self-start">
-                  <button
-                    onClick={() => setShowLetterModal(true)}
-                    className="bg-blue-900 hover:bg-blue-800 text-white rounded-xl py-2 px-4 text-xs md:text-sm flex items-center justify-center gap-1.5 font-bold transition shadow-sm border border-transparent cursor-pointer"
-                  >
-                    <FileText className="w-4 h-4 shrink-0" />
-                    <span>पत्र सिर्जना गर्नुहोस् (Generate Letter)</span>
-                  </button>
+                  {canPrintLetter && (
+                    <button
+                      onClick={() => setShowLetterModal(true)}
+                      className="bg-blue-900 hover:bg-blue-800 text-white rounded-xl py-2 px-4 text-xs md:text-sm flex items-center justify-center gap-1.5 font-bold transition shadow-sm border border-transparent cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4 shrink-0" />
+                      <span>पत्र सिर्जना गर्नुहोस् (Generate Letter)</span>
+                    </button>
+                  )}
                   {isAdmin && (
                     <button
                       onClick={() => setShowAdminRecordsModal(true)}
@@ -367,21 +400,29 @@ export default function Home() {
             </div>
 
             {/* ── Tab content panels ── */}
-            <TabsContent value="fitness">
-              <FitnessTab records={recentFitness} onSuccess={handleSuccess} onError={showError} />
-            </TabsContent>
+            {hasModule("fitness") && (
+              <TabsContent value="fitness">
+                <FitnessTab records={recentFitness} onSuccess={handleSuccess} onError={showError} />
+              </TabsContent>
+            )}
 
-            <TabsContent value="routePermit">
-              <RoutePermitTab records={recentRoutePermits} onSuccess={handleSuccess} onError={showError} />
-            </TabsContent>
+            {hasModule("routePermit") && (
+              <TabsContent value="routePermit">
+                <RoutePermitTab records={recentRoutePermits} onSuccess={handleSuccess} onError={showError} />
+              </TabsContent>
+            )}
 
-            <TabsContent value="roadworthiness">
-              <RoadworthinessTab records={recentRoadworth} onSuccess={handleSuccess} onError={showError} />
-            </TabsContent>
+            {hasModule("roadworthiness") && (
+              <TabsContent value="roadworthiness">
+                <RoadworthinessTab records={recentRoadworth} onSuccess={handleSuccess} onError={showError} />
+              </TabsContent>
+            )}
 
-            <TabsContent value="pollution">
-              <PollutionTab records={recentPollution} onSuccess={handleSuccess} onError={showError} />
-            </TabsContent>
+            {hasModule("pollution") && (
+              <TabsContent value="pollution">
+                <PollutionTab records={recentPollution} onSuccess={handleSuccess} onError={showError} />
+              </TabsContent>
+            )}
 
             <TabsContent value="search">
               <SearchTab onError={showError} />
@@ -393,25 +434,35 @@ export default function Home() {
               </TabsContent>
             )}
 
-            <TabsContent value="mechanicalTest">
-              <MechanicalTestTab records={recentMechanicalTest} onSuccess={handleSuccess} onError={showError} />
-            </TabsContent>
+            {hasModule("mechanicalTest") && (
+              <TabsContent value="mechanicalTest">
+                <MechanicalTestTab records={recentMechanicalTest} onSuccess={handleSuccess} onError={showError} />
+              </TabsContent>
+            )}
 
-            <TabsContent value="patake">
-              <PatakeTab records={recentPatake} onSuccess={handleSuccess} onError={showError} />
-            </TabsContent>
+            {hasModule("patake") && (
+              <TabsContent value="patake">
+                <PatakeTab records={recentPatake} onSuccess={handleSuccess} onError={showError} />
+              </TabsContent>
+            )}
 
-            <TabsContent value="starkayam">
-              <StarkayamTab records={recentStarkayam} onSuccess={handleSuccess} onError={showError} />
-            </TabsContent>
+            {hasModule("starkayam") && (
+              <TabsContent value="starkayam">
+                <StarkayamTab records={recentStarkayam} onSuccess={handleSuccess} onError={showError} />
+              </TabsContent>
+            )}
 
-            <TabsContent value="monitoring">
-              <MonitoringTab records={recentMonitoring} onSuccess={handleSuccess} onError={showError} />
-            </TabsContent>
+            {hasModule("monitoring") && (
+              <TabsContent value="monitoring">
+                <MonitoringTab records={recentMonitoring} onSuccess={handleSuccess} onError={showError} />
+              </TabsContent>
+            )}
 
-            <TabsContent value="transportRegistration">
-              <TransportRegistrationTab records={recentTransportReg} onSuccess={handleSuccess} onError={showError} />
-            </TabsContent>
+            {hasModule("transportRegistration") && (
+              <TabsContent value="transportRegistration">
+                <TransportRegistrationTab records={recentTransportReg} onSuccess={handleSuccess} onError={showError} />
+              </TabsContent>
+            )}
 
           </Tabs>
         </section>
@@ -445,6 +496,12 @@ export default function Home() {
           onClose={() => setShowAdminRecordsModal(false)}
         />
       )}
+
+      <ModuleRecordsModal
+        key={activeModuleKpi}
+        moduleKey={activeModuleKpi}
+        onClose={() => setActiveModuleKpi(null)}
+      />
     </div>
   );
 }

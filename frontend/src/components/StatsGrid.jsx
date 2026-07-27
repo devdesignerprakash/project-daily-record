@@ -9,13 +9,31 @@ import {
 } from "@/components/ui/card";
 import { Activity, MapPin, ClipboardList, Wind, Wrench, Zap, ShieldCheck, Factory, Bus } from "lucide-react";
 
-export default function StatsGrid({ stats }) {
+const clickableCard =
+  "cursor-pointer transition-transform hover:-translate-y-0.5 hover:shadow-md";
+
+export default function StatsGrid({ stats, onSelectModule }) {
+  const openModule = (key) => () => onSelectModule?.(key);
+  const asButton = (key) => ({
+    role: "button",
+    tabIndex: 0,
+    onClick: openModule(key),
+    onKeyDown: (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openModule(key)();
+      }
+    },
+  });
+
   return (
     <section className="space-y-4">
       {/* Row 1: Original 4 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Fitness */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <Card
+          {...asButton("fitness")}
+          className={`relative overflow-hidden bg-gradient-to-br from-blue-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm ${clickableCard}`}>
           <div className="absolute top-2 right-2 p-2 bg-blue-100 dark:bg-blue-950 rounded-lg text-blue-700 dark:text-blue-300">
             <Activity className="w-5 h-5" />
           </div>
@@ -35,7 +53,9 @@ export default function StatsGrid({ stats }) {
         </Card>
 
         {/* Route Permit */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <Card
+          {...asButton("routePermit")}
+          className={`relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm ${clickableCard}`}>
           <div className="absolute top-2 right-2 p-2 bg-emerald-100 dark:bg-emerald-950 rounded-lg text-emerald-700 dark:text-emerald-300">
             <MapPin className="w-5 h-5" />
           </div>
@@ -55,7 +75,9 @@ export default function StatsGrid({ stats }) {
         </Card>
 
         {/* Roadworthiness */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <Card
+          {...asButton("roadworthiness")}
+          className={`relative overflow-hidden bg-gradient-to-br from-purple-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm ${clickableCard}`}>
           <div className="absolute top-2 right-2 p-2 bg-purple-100 dark:bg-purple-950 rounded-lg text-purple-700 dark:text-purple-300">
             <ClipboardList className="w-5 h-5" />
           </div>
@@ -75,7 +97,9 @@ export default function StatsGrid({ stats }) {
         </Card>
 
         {/* Pollution Test */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <Card
+          {...asButton("pollution")}
+          className={`relative overflow-hidden bg-gradient-to-br from-amber-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm ${clickableCard}`}>
           <div className="absolute top-2 right-2 p-2 bg-amber-100 dark:bg-amber-950 rounded-lg text-amber-700 dark:text-amber-300">
             <Wind className="w-5 h-5" />
           </div>
@@ -97,7 +121,9 @@ export default function StatsGrid({ stats }) {
       {/* Row 2: New 5 modules */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Mechanical Test */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <Card
+          {...asButton("mechanicalTest")}
+          className={`relative overflow-hidden bg-gradient-to-br from-orange-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm ${clickableCard}`}>
           <div className="absolute top-2 right-2 p-2 bg-orange-100 dark:bg-orange-950 rounded-lg text-orange-700 dark:text-orange-300">
             <Wrench className="w-5 h-5" />
           </div>
@@ -115,7 +141,9 @@ export default function StatsGrid({ stats }) {
         </Card>
 
         {/* Patake */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-rose-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <Card
+          {...asButton("patake")}
+          className={`relative overflow-hidden bg-gradient-to-br from-rose-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm ${clickableCard}`}>
           <div className="absolute top-2 right-2 p-2 bg-rose-100 dark:bg-rose-950 rounded-lg text-rose-700 dark:text-rose-300">
             <Zap className="w-5 h-5" />
           </div>
@@ -133,7 +161,9 @@ export default function StatsGrid({ stats }) {
         </Card>
 
         {/* Starkayam */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-teal-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <Card
+          {...asButton("starkayam")}
+          className={`relative overflow-hidden bg-gradient-to-br from-teal-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm ${clickableCard}`}>
           <div className="absolute top-2 right-2 p-2 bg-teal-100 dark:bg-teal-950 rounded-lg text-teal-700 dark:text-teal-300">
             <ShieldCheck className="w-5 h-5" />
           </div>
@@ -151,7 +181,9 @@ export default function StatsGrid({ stats }) {
         </Card>
 
         {/* Monitoring */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-cyan-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <Card
+          {...asButton("monitoring")}
+          className={`relative overflow-hidden bg-gradient-to-br from-cyan-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm ${clickableCard}`}>
           <div className="absolute top-2 right-2 p-2 bg-cyan-100 dark:bg-cyan-950 rounded-lg text-cyan-700 dark:text-cyan-300">
             <Factory className="w-5 h-5" />
           </div>
@@ -170,7 +202,9 @@ export default function StatsGrid({ stats }) {
         </Card>
 
         {/* Transport Registration */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <Card
+          {...asButton("transportRegistration")}
+          className={`relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm ${clickableCard}`}>
           <div className="absolute top-2 right-2 p-2 bg-indigo-100 dark:bg-indigo-950 rounded-lg text-indigo-700 dark:text-indigo-300">
             <Bus className="w-5 h-5" />
           </div>

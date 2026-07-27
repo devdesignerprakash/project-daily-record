@@ -60,7 +60,9 @@ class UserService {
       if (data.fullName) user.fullName = data.fullName;
       if (data.designation) user.designation = data.designation;
       if (data.userType) user.userType = data.userType;
-      
+      if (data.allowedModules) user.allowedModules = data.allowedModules;
+      if (data.canPrintLetter !== undefined) user.canPrintLetter = data.canPrintLetter;
+
       if (data.password) {
         user.password = data.password; // Mongoose pre-save hook will hash it
       }

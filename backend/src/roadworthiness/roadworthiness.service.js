@@ -20,6 +20,49 @@ class RoadworthinessService {
     }
   }
 
+  static async updateRoadworthinessData(id, data) {
+    try {
+      const testDoneValue = data?.roadworthiness_test_done !== undefined
+        ? data.roadworthiness_test_done
+        : data?.isroadwrothiss_test_done;
+
+      if (testDoneValue !== undefined) {
+        data.roadworthiness_test_done = Number(testDoneValue);
+      }
+
+      const updated = await Roadworthiness.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+        .populate('createdBy', 'fullName email designation userType');
+      if (!updated) {
+        throw new Error("Roadworthiness record not found");
+      }
+      return updated;
+    } catch (error) {
+      console.error("Error updating roadworthiness data:", error);
+      throw error;
+    }
+  }
+
+  static async getRoadworthinessDataByDateRange(startDateString, endDateString) {
+    try {
+      const startDate = startDateString ? new Date(startDateString) : new Date();
+      const endDate = endDateString ? new Date(endDateString) : new Date();
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new Error("Invalid date format. Expected YYYY-MM-DD.");
+      }
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+      const endExclusive = new Date(endDate);
+      endExclusive.setDate(endExclusive.getDate() + 1);
+
+      return await Roadworthiness.find({
+        createdAt: { $gte: startDate, $lt: endExclusive },
+      }).populate('createdBy', 'fullName email designation userType');
+    } catch (error) {
+      console.error("Error fetching roadworthiness data by date range:", error);
+      throw error;
+    }
+  }
+
   static async getRoadworthinessDataByTimeRange(startTime, endTime) {
     try {
       startTime = convertToDate(startTime);
