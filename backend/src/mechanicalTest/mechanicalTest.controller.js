@@ -11,10 +11,33 @@ class MechanicalTestController {
         }
     }
 
+    static async updateMechanicalTestData(req, res) {
+        try {
+            const { id } = req.params;
+            const data = await MechanicalTestService.updateMechanicalTestData(id, req.body);
+            res.status(200).json({ message: 'Mechanical test data updated successfully', data });
+        } catch (error) {
+            res.status(error.message === "Mechanical test record not found" ? 404 : 400).json({ message: error.message });
+        }
+    }
+
     static async getMechanicalTestDataByDate(req, res) {
         try {
             const { date } = req.query;
             const data = await MechanicalTestService.getMechanicalTestDataByDate(date);
+            res.status(200).json({ message: 'Mechanical test data fetched successfully', data });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+
+    static async getMechanicalTestDataByDateRange(req, res) {
+        try {
+            const { startDate, endDate } = req.query;
+            if (!startDate || !endDate) {
+                return res.status(400).json({ message: 'startDate and endDate query parameters are required' });
+            }
+            const data = await MechanicalTestService.getMechanicalTestDataByDateRange(startDate, endDate);
             res.status(200).json({ message: 'Mechanical test data fetched successfully', data });
         } catch (error) {
             res.status(400).json({ message: error.message });

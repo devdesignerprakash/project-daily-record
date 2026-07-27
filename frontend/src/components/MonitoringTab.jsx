@@ -20,12 +20,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Calendar, Factory } from "lucide-react";
+import { PlusCircle, Calendar, Factory, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
 
 export default function MonitoringTab({ records, onSuccess, onError }) {
   const [form, setForm] = useState({ naya: "", nabikaran: "" });
+  const [editingId, setEditingId] = useState(null);
+
+  const startEdit = (row) => {
+    setEditingId(row._id);
+    setForm({ naya: String(row.naya ?? ""), nabikaran: String(row.nabikaran ?? "") });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm({ naya: "", nabikaran: "" });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,8 +45,14 @@ export default function MonitoringTab({ records, onSuccess, onError }) {
       return;
     }
     try {
-      await api.post("/api/monitoring", form);
-      onSuccess("अनुगमन डाटा सफलतापूर्वक रेकर्ड भयो!");
+      if (editingId) {
+        await api.put(`/api/monitoring/${editingId}`, form);
+        onSuccess("अनुगमन डाटा सफलतापूर्वक सम्पादन भयो!");
+      } else {
+        await api.post("/api/monitoring", form);
+        onSuccess("अनुगमन डाटा सफलतापूर्वक रेकर्ड भयो!");
+      }
+      setEditingId(null);
       setForm({ naya: "", nabikaran: "" });
     } catch (err) {
       onError(err.message);
@@ -48,11 +65,11 @@ export default function MonitoringTab({ records, onSuccess, onError }) {
       <Card className="lg:col-span-1 border border-slate-200 dark:border-zinc-800 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2">
-            <PlusCircle className="w-4 h-4 text-cyan-600" />
-            नयाँ प्रविष्टि (New Entry)
+            {editingId ? <Pencil className="w-4 h-4 text-amber-600" /> : <PlusCircle className="w-4 h-4 text-cyan-600" />}
+            {editingId ? "प्रविष्टि सम्पादन (Edit Entry)" : "नयाँ प्रविष्टि (New Entry)"}
           </CardTitle>
           <CardDescription className="text-xs">
-            कारखाना वर्कसप / सवारी परीक्षण केन्द्रको अनुगमन दर्ता गर्नुहोस्
+            {editingId ? "छानिएको रेकर्ड सम्पादन गरी पुन: सबमिट गर्नुहोस्" : "कारखाना वर्कसप / सवारी परीक्षण केन्द्रको अनुगमन दर्ता गर्नुहोस्"}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -86,12 +103,22 @@ export default function MonitoringTab({ records, onSuccess, onError }) {
               />
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="gap-2">
+            {editingId && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={cancelEdit}
+                className="border-slate-200 dark:border-zinc-800 text-sm"
+              >
+                रद्द (Cancel)
+              </Button>
+            )}
             <Button
               type="submit"
-              className="w-full bg-cyan-700 hover:bg-cyan-600 text-white rounded-md text-sm"
+              className={`flex-1 text-white rounded-md text-sm ${editingId ? "bg-amber-600 hover:bg-amber-500" : "bg-cyan-700 hover:bg-cyan-600"}`}
             >
-              सबमिट गर्नुहोस् (Submit)
+              {editingId ? "अपडेट गर्नुहोस् (Update)" : "सबमिट गर्नुहोस् (Submit)"}
             </Button>
           </CardFooter>
         </form>
@@ -117,13 +144,14 @@ export default function MonitoringTab({ records, onSuccess, onError }) {
                 <TableHead className="text-xs">नवीकरण</TableHead>
                 <TableHead className="text-xs">जम्मा</TableHead>
                 <TableHead className="text-xs">दर्ता गर्ने</TableHead>
+                <TableHead className="text-xs text-right">सम्पादन</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {records.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={6}
                     className="text-center text-slate-400 py-8 text-xs"
                   >
                     आज कुनै रेकर्ड प्रविष्ट गरिएको छैन।
@@ -133,7 +161,7 @@ export default function MonitoringTab({ records, onSuccess, onError }) {
                 records.map((row) => (
                   <TableRow
                     key={row._id}
-                    className="border-b border-slate-100 dark:border-zinc-900 text-xs"
+                    className={`border-b border-slate-100 dark:border-zinc-900 text-xs ${editingId === row._id ? "bg-amber-50 dark:bg-amber-950/20" : ""}`}
                   >
                     <TableCell className="font-semibold text-slate-500">
                       {formatTime(row.createdAt)}
@@ -145,6 +173,16 @@ export default function MonitoringTab({ records, onSuccess, onError }) {
                     </TableCell>
                     <TableCell className="text-slate-500">
                       {row.createdBy?.fullName || "System"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(row)}
+                        title="सम्पादन गर्नुहोस्"
+                        className="p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 transition"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
                     </TableCell>
                   </TableRow>
                 ))

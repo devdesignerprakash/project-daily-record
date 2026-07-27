@@ -10,10 +10,31 @@ class RoadworthinessController{
             res.status(400).json({ message: error.message });
         }
     }
+    static async updateRoadworthinessData(req, res) {
+        try {
+            const { id } = req.params;
+            const roadworthinessData = await RoadworthinessService.updateRoadworthinessData(id, req.body);
+            res.status(200).json({ message: 'Roadworthiness data updated successfully', data: roadworthinessData });
+        } catch (error) {
+            res.status(error.message === "Roadworthiness record not found" ? 404 : 400).json({ message: error.message });
+        }
+    }
     static async getRoadworthinessDataByDate(req, res) {
         try {
             const { date } = req.query;
             const roadworthinessData = await RoadworthinessService.getRoadworthinessDataByDate(date);
+            res.status(200).json({ message: 'Roadworthiness data fetched successfully', data: roadworthinessData });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+    static async getRoadworthinessDataByDateRange(req, res) {
+        try {
+            const { startDate, endDate } = req.query;
+            if (!startDate || !endDate) {
+                return res.status(400).json({ message: 'startDate and endDate query parameters are required' });
+            }
+            const roadworthinessData = await RoadworthinessService.getRoadworthinessDataByDateRange(startDate, endDate);
             res.status(200).json({ message: 'Roadworthiness data fetched successfully', data: roadworthinessData });
         } catch (error) {
             res.status(400).json({ message: error.message });

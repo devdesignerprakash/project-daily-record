@@ -18,6 +18,46 @@ class FitnessService {
     }
   }
 
+  static async updateFitnessData(id, data) {
+    try {
+      if (data?.nabikaran !== undefined) data.nabikaran = Number(data.nabikaran);
+      if (data?.naya !== undefined) data.naya = Number(data.naya);
+      if (data?.pratilipi !== undefined && data?.pratilipi !== null) {
+        data.pratilipi = Number(data.pratilipi);
+      }
+      const updated = await Fitness.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+        .populate('createdBy', 'fullName email designation userType');
+      if (!updated) {
+        throw new Error("Fitness record not found");
+      }
+      return updated;
+    } catch (error) {
+      console.error("Error updating fitness data:", error);
+      throw error;
+    }
+  }
+
+  static async getFitnessDataByDateRange(startDateString, endDateString) {
+    try {
+      const startDate = startDateString ? new Date(startDateString) : new Date();
+      const endDate = endDateString ? new Date(endDateString) : new Date();
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new Error("Invalid date format. Expected YYYY-MM-DD.");
+      }
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+      const endExclusive = new Date(endDate);
+      endExclusive.setDate(endExclusive.getDate() + 1);
+
+      return await Fitness.find({
+        createdAt: { $gte: startDate, $lt: endExclusive },
+      }).populate('createdBy', 'fullName email designation userType');
+    } catch (error) {
+      console.error("Error fetching fitness data by date range:", error);
+      throw error;
+    }
+  }
+
   static async getFitnessDataByTimeRange(startTime, endTime) {
     try {
       startTime = convertToDate(startTime);

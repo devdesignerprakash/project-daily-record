@@ -44,6 +44,42 @@ class AdminService {
             transportRegistration,
         };
     }
+
+    static async getAllModuleRecordsByRange(startDate, endDate) {
+        const [
+            fitness,
+            routePermit,
+            roadworthiness,
+            pollution,
+            mechanicalTest,
+            patake,
+            starkayam,
+            monitoring,
+            transportRegistration,
+        ] = await Promise.all([
+            FitnessService.getFitnessDataByDateRange(startDate, endDate),
+            RoutePermitService.getRoutePermitDataByDateRange(startDate, endDate),
+            RoadworthinessService.getRoadworthinessDataByDateRange(startDate, endDate),
+            PollutionService.getPollutionDataByDateRange(startDate, endDate),
+            MechanicalTestService.getMechanicalTestDataByDateRange(startDate, endDate),
+            PatakeService.getPatakeDataByDateRange(startDate, endDate),
+            StarkayamService.getStarkayamDataByDateRange(startDate, endDate),
+            MonitoringService.getMonitoringDataByDateRange(startDate, endDate),
+            TransportRegistrationService.getTransportRegistrationDataByDateRange(startDate, endDate),
+        ]);
+
+        return {
+            fitness,
+            routePermit,
+            roadworthiness,
+            pollution,
+            mechanicalTest,
+            patake,
+            starkayam,
+            monitoring,
+            transportRegistration,
+        };
+    }
 }
 
 export default AdminService;

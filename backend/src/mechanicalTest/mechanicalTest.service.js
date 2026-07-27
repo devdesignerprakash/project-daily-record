@@ -14,6 +14,21 @@ class MechanicalTestService {
         }
     }
 
+    static async updateMechanicalTestData(id, data) {
+        try {
+            if (data?.count !== undefined) data.count = Number(data.count);
+            const updated = await MechanicalTest.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+                .populate('createdBy', 'fullName email designation userType');
+            if (!updated) {
+                throw new Error("Mechanical test record not found");
+            }
+            return updated;
+        } catch (error) {
+            console.error('Error updating mechanical test data:', error);
+            throw error;
+        }
+    }
+
     static async getMechanicalTestDataByDate(dateString) {
         try {
             const date = dateString ? new Date(dateString) : new Date();
@@ -26,6 +41,24 @@ class MechanicalTestService {
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
             console.error('Error fetching mechanical test data by date:', error);
+            throw error;
+        }
+    }
+
+    static async getMechanicalTestDataByDateRange(startDateString, endDateString) {
+        try {
+            const startDate = startDateString ? new Date(startDateString) : new Date();
+            const endDate = endDateString ? new Date(endDateString) : new Date();
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) throw new Error('Invalid date format.');
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+            const endExclusive = new Date(endDate);
+            endExclusive.setDate(endExclusive.getDate() + 1);
+            return await MechanicalTest.find({
+                createdAt: { $gte: startDate, $lt: endExclusive }
+            }).populate('createdBy', 'fullName email designation userType');
+        } catch (error) {
+            console.error('Error fetching mechanical test data by date range:', error);
             throw error;
         }
     }

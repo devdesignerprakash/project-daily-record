@@ -1,15 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { X, CalendarSearch, RefreshCw, ShieldAlert } from "lucide-react";
+import { X, CalendarSearch, RefreshCw, ShieldAlert, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -19,65 +13,90 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import api from "@/lib/api";
-import { formatTime } from "@/lib/utils";
+import * as XLSX from "xlsx";
 
-// ── which modules to show, and which fields each one's rows carry ──
-const MODULE_CONFIG = [
-  { key: "fitness", label: "सवारी फिटनेस", columns: [
-      { field: "naya", label: "नयाँ" },
-      { field: "nabikaran", label: "नवीकरण" },
-      { field: "pratilipi", label: "प्रतिलिपि" },
-  ]},
-  { key: "routePermit", label: "अन्तर प्रदेशीय रुट इजाजत", columns: [
-      { field: "naya", label: "नयाँ" },
-      { field: "nabikaran", label: "नवीकरण" },
-      { field: "pratilipi", label: "प्रतिलिपि" },
-  ]},
-  { key: "roadworthiness", label: "सडक योग्यता (Road Worthiness)", columns: [
-      { field: "roadworthiness_test_done", label: "परीक्षण सम्पन्न" },
-  ]},
-  { key: "pollution", label: "प्रदुषण जाँचपास", columns: [
-      { field: "pass", label: "पास" },
-      { field: "fail", label: "फेल" },
-  ]},
-  { key: "mechanicalTest", label: "यान्त्रिक परीक्षण", columns: [
-      { field: "count", label: "संख्या" },
-  ]},
-  { key: "patake", label: "पटके", columns: [
-      { field: "count", label: "संख्या" },
-  ]},
-  { key: "starkayam", label: "स्तर कायम", columns: [
-      { field: "naya", label: "नयाँ" },
-      { field: "nabikaran", label: "नवीकरण" },
-  ]},
-  { key: "monitoring", label: "कारखाना वर्कसप / सवारी परीक्षण केन्द्र अनुगमन", columns: [
-      { field: "naya", label: "नयाँ" },
-      { field: "nabikaran", label: "नवीकरण" },
-  ]},
-  { key: "transportRegistration", label: "यातायात सेवा पञ्जीकरण", columns: [
-      { field: "naya", label: "नयाँ" },
-      { field: "thap", label: "थप" },
-      { field: "nabikaran", label: "नवीकरण" },
-  ]},
-];
+const sumField = (arr, field) => (arr || []).reduce((s, r) => s + (Number(r[field]) || 0), 0);
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
-export default function AdminRecordsModal({ isOpen, onClose }) {
-  const [date, setDate]       = useState(todayStr());
-  const [data, setData]       = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState("");
+// Same तपसिल row mapping used by the official letter (LetterModal) —
+// keeps this admin summary and the printed letter consistent.
+const buildRows = (data) => {
+  const fitList  = data?.fitness  || [];
+  const rpList   = data?.routePermit || [];
+  const rwList   = data?.roadworthiness || [];
+  const polList  = data?.pollution || [];
+  const mechList = data?.mechanicalTest || [];
+  const patList  = data?.patake || [];
+  const starList = data?.starkayam || [];
+  const monList  = data?.monitoring || [];
+  const trList   = data?.transportRegistration || [];
 
-  const fetchRecords = useCallback(async (forDate) => {
+  return [
+    {
+      sn: "१", name: "अन्तर प्रदेशीय रुट इजाजतपत्र",
+      naya: sumField(rpList, "naya"),
+      nabikaran: sumField(rpList, "nabikaran"),
+    },
+    {
+      sn: "२", name: "सवारी जाँचपास",
+      naya: sumField(fitList, "naya"),
+      nabikaran: sumField(fitList, "nabikaran"),
+    },
+    {
+      sn: "३", name: "पटके",
+      naya: sumField(patList, "count"),
+      nabikaran: 0,
+    },
+    {
+      sn: "४", name: "यान्त्रिक परीक्षण (Vehicle Fitness Test Center)",
+      naya: sumField(mechList, "count"),
+      nabikaran: 0,
+    },
+    {
+      sn: "५", name: "प्रदुषण जाँचपास",
+      naya: sumField(polList, "pass") + sumField(polList, "fail"),
+      nabikaran: 0,
+    },
+    {
+      sn: "६", name: "Road Worthiness Test",
+      naya: 0,
+      nabikaran: sumField(rwList, "roadworthiness_test_done"),
+    },
+    {
+      sn: "७", name: "यातायात सेवा पञ्जीकरण संख्या",
+      naya: sumField(trList, "naya") + sumField(trList, "thap"),
+      nabikaran: sumField(trList, "nabikaran"),
+    },
+    {
+      sn: "८", name: "स्तर कायम",
+      naya: sumField(starList, "naya"),
+      nabikaran: sumField(starList, "nabikaran"),
+    },
+    {
+      sn: "९", name: "कारखाना वर्कसप / सवारी परीक्षण केन्द्रमा अनुगमन",
+      naya: sumField(monList, "naya"),
+      nabikaran: sumField(monList, "nabikaran"),
+    },
+  ];
+};
+
+export default function AdminRecordsModal({ isOpen, onClose }) {
+  const [fromDate, setFromDate] = useState(todayStr());
+  const [toDate, setToDate]     = useState(todayStr());
+  const [rows, setRows]         = useState([]);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+
+  const fetchRecords = useCallback(async (from, to) => {
     setLoading(true);
     setError("");
     try {
-      const res = await api.get("/api/admin/records-by-date", { params: { date: forDate } });
-      setData(res.data || null);
+      const res = await api.get("/api/admin/records-by-range", { params: { startDate: from, endDate: to } });
+      setRows(buildRows(res.data));
     } catch (err) {
       setError(err.message || "विवरण ल्याउन समस्या भयो।");
-      setData(null);
+      setRows([]);
     } finally {
       setLoading(false);
     }
@@ -88,7 +107,7 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
     if (isOpen) {
       void (async () => {
         if (active) {
-          await fetchRecords(date);
+          await fetchRecords(fromDate, toDate);
         }
       })();
     }
@@ -98,21 +117,56 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
+  const totalNaya      = rows.reduce((s, r) => s + (r.naya || 0), 0);
+  const totalNabikaran = rows.reduce((s, r) => s + (r.nabikaran || 0), 0);
+  const grandTotal      = totalNaya + totalNabikaran;
+
+  const rangeLabel = fromDate === toDate ? `मिति ${fromDate}` : `मिति ${fromDate} देखि ${toDate} सम्म`;
+
+  const downloadExcel = () => {
+    const titleLine = `सवारी परीक्षण कार्यालय टेकु, ${rangeLabel}`;
+
+    const aoa = [
+      ["सि.नं.", "क्रियाकलाप/विवरण (संख्या)", titleLine, "", ""],
+      ["", "", "नयाँ", "नवीकरण", "जम्मा"],
+      ...rows.map((row) => [
+        row.sn,
+        row.name,
+        row.naya || 0,
+        row.nabikaran || 0,
+        (row.naya || 0) + (row.nabikaran || 0),
+      ]),
+      ["", "जम्मा", totalNaya, totalNabikaran, grandTotal],
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+      { s: { r: 0, c: 2 }, e: { r: 0, c: 4 } },
+    ];
+    ws["!cols"] = [{ wch: 6 }, { wch: 40 }, { wch: 12 }, { wch: 12 }, { wch: 10 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "तपसिल");
+    XLSX.writeFile(wb, `all-modules-${fromDate}-to-${toDate}.xlsx`);
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
 
         {/* ── Header ── */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex justify-between items-center bg-slate-50 dark:bg-zinc-900/50 rounded-t-2xl">
           <div>
             <h2 className="text-base font-bold text-slate-800 dark:text-zinc-100 flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-emerald-600" />
-              मिति अनुसार सबै विवरण (All Modules — By Date)
+              मिति अनुसार सबै विवरण (All Modules — तपसिल)
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              कुनै पनि मितिको सबै मोड्युलहरूको दर्ता विवरण हेर्नुहोस्।
+              छानिएको मिति सीमाको सबै मोड्युलको जम्मा विवरण।
             </p>
           </div>
           <button
@@ -123,93 +177,114 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* ── Date picker ── */}
+        {/* ── Date range picker ── */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-end gap-3">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-600 dark:text-zinc-400">मिति छान्नुहोस् (Select Date)</label>
+            <label className="text-xs font-semibold text-slate-600 dark:text-zinc-400">देखि मिति (From)</label>
             <Input
               type="date"
-              value={date}
+              value={fromDate}
+              max={toDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="text-sm bg-transparent border-slate-200 dark:border-zinc-800 w-full sm:w-44"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-600 dark:text-zinc-400">सम्म मिति (To)</label>
+            <Input
+              type="date"
+              value={toDate}
+              min={fromDate}
               max={todayStr()}
-              onChange={(e) => setDate(e.target.value)}
-              className="text-sm bg-transparent border-slate-200 dark:border-zinc-800 w-full sm:w-56"
+              onChange={(e) => setToDate(e.target.value)}
+              className="text-sm bg-transparent border-slate-200 dark:border-zinc-800 w-full sm:w-44"
             />
           </div>
           <Button
-            onClick={() => fetchRecords(date)}
-            disabled={loading || !date}
+            onClick={() => fetchRecords(fromDate, toDate)}
+            disabled={loading || !fromDate || !toDate}
             className="bg-emerald-700 hover:bg-emerald-600 text-white rounded-md text-sm flex items-center gap-1.5"
           >
             {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CalendarSearch className="w-4 h-4" />}
             हेर्नुहोस् (View)
           </Button>
+          <Button
+            variant="outline"
+            onClick={downloadExcel}
+            disabled={loading || rows.length === 0}
+            className="text-sm border-green-200 text-green-700 dark:border-green-800 dark:text-green-400 flex items-center gap-1.5"
+          >
+            <FileSpreadsheet className="w-4 h-4 shrink-0" />
+            एक्सेल डाउनलोड
+          </Button>
         </div>
 
-        {/* ── Body ── */}
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-zinc-950 space-y-5">
+        {/* ── Body: single तपसिल-style datatable ── */}
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-zinc-950">
           {error && (
-            <div className="p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+            <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
               ⚠ {error}
             </div>
           )}
 
-          {MODULE_CONFIG.map((mod) => {
-            const rows = data?.[mod.key] || [];
-            return (
-              <Card key={mod.key} className="border border-slate-200 dark:border-zinc-800 shadow-sm">
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-bold flex items-center justify-between">
-                    <span>{mod.label}</span>
-                    <span className="text-[11px] font-semibold text-slate-400">{rows.length} रेकर्ड</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
-                      <TableRow>
-                        <TableHead className="text-xs">समय (Time)</TableHead>
-                        {mod.columns.map((col) => (
-                          <TableHead key={col.field} className="text-xs">{col.label}</TableHead>
-                        ))}
-                        <TableHead className="text-xs">दर्ता गर्ने</TableHead>
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
+                <TableRow>
+                  <TableHead rowSpan={2} className="text-xs border-r border-slate-200 dark:border-zinc-800 align-middle">
+                    सि.नं.
+                  </TableHead>
+                  <TableHead rowSpan={2} className="text-xs border-r border-slate-200 dark:border-zinc-800 align-middle">
+                    क्रियाकलाप/विवरण (संख्या)
+                  </TableHead>
+                  <TableHead colSpan={3} className="text-xs text-center font-bold">
+                    सवारी परीक्षण कार्यालय टेकु, {rangeLabel}
+                  </TableHead>
+                </TableRow>
+                <TableRow>
+                  <TableHead className="text-xs text-center border-r border-slate-200 dark:border-zinc-800">नयाँ</TableHead>
+                  <TableHead className="text-xs text-center border-r border-slate-200 dark:border-zinc-800">नवीकरण</TableHead>
+                  <TableHead className="text-xs text-center">जम्मा</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-slate-400 py-8 text-xs">
+                      {loading ? "लोड हुँदैछ..." : "यस मिति सीमामा कुनै रेकर्ड छैन।"}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  <>
+                    {rows.map((row) => (
+                      <TableRow key={row.sn} className="border-b border-slate-100 dark:border-zinc-900 text-xs">
+                        <TableCell className="text-center font-medium text-slate-600 border-r border-slate-100 dark:border-zinc-900">
+                          {row.sn}
+                        </TableCell>
+                        <TableCell className="border-r border-slate-100 dark:border-zinc-900">{row.name}</TableCell>
+                        <TableCell className="text-center font-semibold border-r border-slate-100 dark:border-zinc-900">
+                          {row.naya || 0}
+                        </TableCell>
+                        <TableCell className="text-center font-semibold border-r border-slate-100 dark:border-zinc-900">
+                          {row.nabikaran || 0}
+                        </TableCell>
+                        <TableCell className="text-center font-bold text-slate-900 dark:text-zinc-100">
+                          {(row.naya || 0) + (row.nabikaran || 0)}
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {rows.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={mod.columns.length + 2}
-                            className="text-center text-slate-400 py-6 text-xs"
-                          >
-                            यस मितिमा कुनै रेकर्ड छैन।
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        rows.map((row) => (
-                          <TableRow
-                            key={row._id}
-                            className="border-b border-slate-100 dark:border-zinc-900 text-xs"
-                          >
-                            <TableCell className="font-semibold text-slate-500">
-                              {formatTime(row.createdAt)}
-                            </TableCell>
-                            {mod.columns.map((col) => (
-                              <TableCell key={col.field} className="font-semibold text-slate-800 dark:text-zinc-200">
-                                {row[col.field] ?? 0}
-                              </TableCell>
-                            ))}
-                            <TableCell className="text-slate-500">
-                              {row.createdBy?.fullName || "System"}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            );
-          })}
+                    ))}
+                    <TableRow className="bg-slate-100 dark:bg-zinc-800 font-bold text-xs">
+                      <TableCell className="border-r border-slate-200 dark:border-zinc-700" />
+                      <TableCell className="border-r border-slate-200 dark:border-zinc-700">जम्मा</TableCell>
+                      <TableCell className="text-center border-r border-slate-200 dark:border-zinc-700">{totalNaya}</TableCell>
+                      <TableCell className="text-center border-r border-slate-200 dark:border-zinc-700">{totalNabikaran}</TableCell>
+                      <TableCell className="text-center text-blue-900 dark:text-blue-400">{grandTotal}</TableCell>
+                    </TableRow>
+                  </>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {/* ── Footer ── */}

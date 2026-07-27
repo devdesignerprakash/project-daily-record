@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { PlusCircle, Users, Edit3, XCircle } from "lucide-react";
 import api from "@/lib/api";
+import { MODULE_OPTIONS, MODULE_KEYS } from "@/lib/modules";
 
 export default function UserManagementTab({ onSuccess, onError }) {
   const [users, setUsers] = useState([]);
@@ -33,6 +34,14 @@ export default function UserManagementTab({ onSuccess, onError }) {
   const [designation, setDesignation] = useState("");
   const [userType, setUserType] = useState("user");
   const [password, setPassword] = useState("");
+  const [allowedModules, setAllowedModules] = useState(MODULE_KEYS);
+  const [canPrintLetter, setCanPrintLetter] = useState(true);
+
+  const toggleModule = (key) => {
+    setAllowedModules((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
 
   // Edit states
   const [editingUserId, setEditingUserId] = useState(null);
@@ -69,6 +78,9 @@ export default function UserManagementTab({ onSuccess, onError }) {
     setDesignation(user.designation);
     setUserType(user.userType);
     setPassword(""); // Clear password field on edit select
+    // Legacy accounts created before this field existed get full access.
+    setAllowedModules(Array.isArray(user.allowedModules) ? user.allowedModules : MODULE_KEYS);
+    setCanPrintLetter(user.canPrintLetter !== false);
   };
 
   const handleCancelEdit = () => {
@@ -78,6 +90,8 @@ export default function UserManagementTab({ onSuccess, onError }) {
     setDesignation("");
     setUserType("user");
     setPassword("");
+    setAllowedModules(MODULE_KEYS);
+    setCanPrintLetter(true);
   };
 
   const handleSubmit = async (e) => {
@@ -97,6 +111,8 @@ export default function UserManagementTab({ onSuccess, onError }) {
         email,
         designation,
         userType,
+        allowedModules,
+        canPrintLetter,
       };
       if (password) {
         payload.password = password;
@@ -197,6 +213,61 @@ export default function UserManagementTab({ onSuccess, onError }) {
                 </option>
               </select>
             </div>
+            {userType === "user" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold">
+                    मोड्युल पहुँच (Editable Modules)
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAllowedModules((prev) =>
+                        prev.length === MODULE_KEYS.length ? [] : MODULE_KEYS
+                      )
+                    }
+                    className="text-[11px] font-semibold text-blue-600 hover:underline"
+                  >
+                    {allowedModules.length === MODULE_KEYS.length ? "सबै हटाउनुहोस्" : "सबै छान्नुहोस्"}
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-1.5 border border-slate-200 dark:border-zinc-800 rounded-md p-2.5 max-h-48 overflow-y-auto">
+                  {MODULE_OPTIONS.map((mod) => (
+                    <label
+                      key={mod.key}
+                      className="flex items-center gap-2 text-xs text-slate-700 dark:text-zinc-300 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={allowedModules.includes(mod.key)}
+                        onChange={() => toggleModule(mod.key)}
+                        className="accent-emerald-600"
+                      />
+                      {mod.label}
+                    </label>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  यहाँ नछानिएका मोड्युलका ट्याब यो प्रयोगकर्तालाई देखिने छैनन्।
+                </p>
+              </div>
+            )}
+            {userType === "user" && (
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={canPrintLetter}
+                    onChange={(e) => setCanPrintLetter(e.target.checked)}
+                    className="accent-emerald-600"
+                  />
+                  पत्र प्रिन्ट अनुमति (Can Print Letter)
+                </label>
+                <p className="text-[10px] text-slate-400">
+                  यो निष्क्रिय गरेमा यो प्रयोगकर्तालाई &ldquo;पत्र सिर्जना गर्नुहोस्&rdquo; बटन देखिने छैन।
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="user-pass" className="text-xs font-semibold">
                 पासवर्ड (Password) {editingUserId ? "(परिवर्तन गर्न मात्र भर्नुहोस्)" : "*"}
@@ -252,19 +323,21 @@ export default function UserManagementTab({ onSuccess, onError }) {
                 <TableHead className="text-xs">इमेल (Email)</TableHead>
                 <TableHead className="text-xs">पद (Designation)</TableHead>
                 <TableHead className="text-xs">भूमिका (Role)</TableHead>
+                <TableHead className="text-xs">मोड्युल पहुँच (Modules)</TableHead>
+                <TableHead className="text-xs">पत्र प्रिन्ट (Letter)</TableHead>
                 <TableHead className="text-xs text-right">कार्य (Actions)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-xs text-slate-400">
+                  <TableCell colSpan={7} className="text-center py-8 text-xs text-slate-400">
                     लोड हुँदैछ...
                   </TableCell>
                 </TableRow>
               ) : users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-xs text-slate-400">
+                  <TableCell colSpan={7} className="text-center py-8 text-xs text-slate-400">
                     कुनै प्रयोगकर्ता फेला परेन।
                   </TableCell>
                 </TableRow>
@@ -289,6 +362,24 @@ export default function UserManagementTab({ onSuccess, onError }) {
                       >
                         {row.userType === "admin" ? "प्रशासक" : "प्रयोगकर्ता"}
                       </span>
+                    </TableCell>
+                    <TableCell className="text-slate-500">
+                      {row.userType === "admin" ? (
+                        "सबै (All)"
+                      ) : !Array.isArray(row.allowedModules) || row.allowedModules.length === MODULE_KEYS.length ? (
+                        "सबै (All)"
+                      ) : row.allowedModules.length === 0 ? (
+                        <span className="text-rose-500">कुनै पनि छैन</span>
+                      ) : (
+                        `${row.allowedModules.length}/${MODULE_KEYS.length} मोड्युल`
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {row.userType === "admin" || row.canPrintLetter !== false ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">अनुमति छ</span>
+                      ) : (
+                        <span className="text-rose-500 font-semibold">छैन</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right py-2 px-4">
                       <Button
