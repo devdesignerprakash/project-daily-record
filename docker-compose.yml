@@ -9,6 +9,12 @@ services:
       - mongo-data:/data/db
     ports:
       - 27017:27017
+    healthcheck:
+      test: ["CMD", "mongosh", "mongodb://root:example@127.0.0.1:27017/?authSource=admin", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   backend:
     build:
@@ -24,7 +30,9 @@ services:
       # Set to "true" only once this is deployed behind real HTTPS.
       COOKIE_SECURE: "false"
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+    # Healthcheck itself (GET /api/health) is defined in backend/Dockerfile.
 
   frontend:
     build:
@@ -36,7 +44,9 @@ services:
         # client address instead of baking in one fixed host/port.
         NEXT_PUBLIC_API_URL: ""
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    # Healthcheck itself is defined in frontend/Dockerfile.
 
   nginx:
     image: nginx:alpine
@@ -46,8 +56,16 @@ services:
     ports:
       - "3001:80"
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   mongo-data:

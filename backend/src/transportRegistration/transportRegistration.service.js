@@ -1,4 +1,5 @@
 import convertToDate from '../../utils/convertToDate.js';
+import logger from '../../utils/logger.js';
 import TransportRegistration from './transportRegistration.schema.js';
 
 class TransportRegistrationService {
@@ -11,7 +12,7 @@ class TransportRegistrationService {
             created = await created.populate('createdBy', 'fullName email designation userType');
             return created;
         } catch (error) {
-            console.error('Error creating transport registration data:', error);
+            logger.error('Error creating transport registration data:', error);
             throw error;
         }
     }
@@ -28,7 +29,7 @@ class TransportRegistrationService {
             }
             return updated;
         } catch (error) {
-            console.error('Error updating transport registration data:', error);
+            logger.error('Error updating transport registration data:', error);
             throw error;
         }
     }
@@ -44,7 +45,7 @@ class TransportRegistrationService {
                 createdAt: { $gte: date, $lt: nextDay }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching transport registration data by date:', error);
+            logger.error('Error fetching transport registration data by date:', error);
             throw error;
         }
     }
@@ -62,7 +63,7 @@ class TransportRegistrationService {
                 createdAt: { $gte: startDate, $lt: endExclusive }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching transport registration data by date range:', error);
+            logger.error('Error fetching transport registration data by date range:', error);
             throw error;
         }
     }
@@ -75,7 +76,7 @@ class TransportRegistrationService {
                 createdAt: { $gte: startTime, $lte: endTime }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching transport registration data by time range:', error);
+            logger.error('Error fetching transport registration data by time range:', error);
             throw error;
         }
     }

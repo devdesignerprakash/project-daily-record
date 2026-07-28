@@ -17,7 +17,6 @@ import FitnessTab               from "@/components/FitnessTab";
 import RoutePermitTab           from "@/components/RoutePermitTab";
 import RoadworthinessTab        from "@/components/RoadworthinessTab";
 import PollutionTab             from "@/components/PollutionTab";
-import SearchTab                from "@/components/SearchTab";
 import LetterModal              from "@/components/LetterModal";
 import AdminRecordsModal        from "@/components/AdminRecordsModal";
 import ModuleRecordsModal       from "@/components/ModuleRecordsModal";
@@ -341,9 +340,9 @@ export default function Home() {
                       <Wind className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">प्रदुषण परीक्षण</span>
                     </TabsTrigger>
                   )}
-                  <TabsTrigger value="search" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-sky-700 dark:data-active:text-sky-400 shadow-sm">
+                  {/* <TabsTrigger value="search" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-sky-700 dark:data-active:text-sky-400 shadow-sm">
                     <Search className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">समय सीमा खोज</span>
-                  </TabsTrigger>
+                  </TabsTrigger> */}
                   {isAdmin && (
                     <TabsTrigger value="userManagement" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 shadow-sm data-active:text-emerald-700 dark:data-active:text-emerald-400">
                       <Users className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">प्रयोगकर्ता व्यवस्थापन</span>
@@ -423,10 +422,6 @@ export default function Home() {
                 <PollutionTab records={recentPollution} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
-
-            <TabsContent value="search">
-              <SearchTab onError={showError} />
-            </TabsContent>
 
             {isAdmin && (
               <TabsContent value="userManagement">

@@ -1,4 +1,5 @@
 import convertToDate from "../../utils/convertToDate.js";
+import logger from "../../utils/logger.js";
 import RoutePermit from "./routePermit.schema.js";
 
 class RoutePermitService {
@@ -13,7 +14,7 @@ class RoutePermitService {
       createData = await createData.populate('createdBy', 'fullName email designation userType');
       return createData;
     } catch (error) {
-      console.error("Error creating routePermit data:", error);
+      logger.error("Error creating routePermit data:", error);
       throw error;
     }
   }
@@ -32,7 +33,7 @@ class RoutePermitService {
       }
       return updated;
     } catch (error) {
-      console.error("Error updating routePermit data:", error);
+      logger.error("Error updating routePermit data:", error);
       throw error;
     }
   }
@@ -53,7 +54,7 @@ class RoutePermitService {
         createdAt: { $gte: startDate, $lt: endExclusive },
       }).populate('createdBy', 'fullName email designation userType');
     } catch (error) {
-      console.error("Error fetching routePermit data by date range:", error);
+      logger.error("Error fetching routePermit data by date range:", error);
       throw error;
     }
   }
@@ -70,7 +71,7 @@ class RoutePermitService {
       }).populate('createdBy', 'fullName email designation userType');
       return routePermitData;
     } catch (error) {
-      console.error("Error fetching routePermit data by time range:", error);
+      logger.error("Error fetching routePermit data by time range:", error);
       throw error;
     }
   }
@@ -93,7 +94,7 @@ class RoutePermitService {
       }).populate('createdBy', 'fullName email designation userType');
       return routePermitData;
     } catch (error) {
-      console.error("Error fetching routePermit data by date:", error);
+      logger.error("Error fetching routePermit data by date:", error);
       throw error;
     }
   }

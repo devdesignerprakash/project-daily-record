@@ -1,4 +1,5 @@
 import User from "./user.schema.js";
+import logger from "../../utils/logger.js";
 
 class UserService {
   static async getUserById(id) {
@@ -19,7 +20,7 @@ class UserService {
       const users = await User.find({}).select('-password').sort({ createdAt: -1 });
       return users;
     } catch (error) {
-      console.error("Error fetching all users:", error);
+      logger.error("Error fetching all users:", error);
       throw error;
     }
   }
@@ -36,7 +37,7 @@ class UserService {
       delete userObj.password;
       return userObj;
     } catch (error) {
-      console.error("Error creating user in service:", error);
+      logger.error("Error creating user in service:", error);
       throw error;
     }
   }
@@ -73,7 +74,7 @@ class UserService {
       delete userObj.password;
       return userObj;
     } catch (error) {
-      console.error("Error updating user in service:", error);
+      logger.error("Error updating user in service:", error);
       throw error;
     }
   }

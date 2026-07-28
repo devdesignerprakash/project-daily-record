@@ -1,4 +1,5 @@
 import convertToDate from '../../utils/convertToDate.js';
+import logger from '../../utils/logger.js';
 import Starkayam from './starkayam.schema.js';
 
 class StarkayamService {
@@ -10,7 +11,7 @@ class StarkayamService {
             created = await created.populate('createdBy', 'fullName email designation userType');
             return created;
         } catch (error) {
-            console.error('Error creating starkayam data:', error);
+            logger.error('Error creating starkayam data:', error);
             throw error;
         }
     }
@@ -26,7 +27,7 @@ class StarkayamService {
             }
             return updated;
         } catch (error) {
-            console.error('Error updating starkayam data:', error);
+            logger.error('Error updating starkayam data:', error);
             throw error;
         }
     }
@@ -42,7 +43,7 @@ class StarkayamService {
                 createdAt: { $gte: date, $lt: nextDay }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching starkayam data by date:', error);
+            logger.error('Error fetching starkayam data by date:', error);
             throw error;
         }
     }
@@ -60,7 +61,7 @@ class StarkayamService {
                 createdAt: { $gte: startDate, $lt: endExclusive }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching starkayam data by date range:', error);
+            logger.error('Error fetching starkayam data by date range:', error);
             throw error;
         }
     }
@@ -73,7 +74,7 @@ class StarkayamService {
                 createdAt: { $gte: startTime, $lte: endTime }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching starkayam data by time range:', error);
+            logger.error('Error fetching starkayam data by time range:', error);
             throw error;
         }
     }

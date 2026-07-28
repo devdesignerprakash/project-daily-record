@@ -8,6 +8,7 @@ authRouter.post('/login',AuthController.login)
 authRouter.post('/register',verifyToken,authorizedUser('admin'),AuthController.register)
 authRouter.get('/me',verifyToken,AuthController.me)
 authRouter.post('/logout',verifyToken,AuthController.logout)
+authRouter.put('/change-password',verifyToken,AuthController.changePassword)
 
 
 export default authRouter

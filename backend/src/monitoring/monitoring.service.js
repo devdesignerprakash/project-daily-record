@@ -1,4 +1,5 @@
 import convertToDate from '../../utils/convertToDate.js';
+import logger from '../../utils/logger.js';
 import Monitoring from './monitoring.schema.js';
 
 class MonitoringService {
@@ -10,7 +11,7 @@ class MonitoringService {
             created = await created.populate('createdBy', 'fullName email designation userType');
             return created;
         } catch (error) {
-            console.error('Error creating monitoring data:', error);
+            logger.error('Error creating monitoring data:', error);
             throw error;
         }
     }
@@ -26,7 +27,7 @@ class MonitoringService {
             }
             return updated;
         } catch (error) {
-            console.error('Error updating monitoring data:', error);
+            logger.error('Error updating monitoring data:', error);
             throw error;
         }
     }
@@ -42,7 +43,7 @@ class MonitoringService {
                 createdAt: { $gte: date, $lt: nextDay }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching monitoring data by date:', error);
+            logger.error('Error fetching monitoring data by date:', error);
             throw error;
         }
     }
@@ -60,7 +61,7 @@ class MonitoringService {
                 createdAt: { $gte: startDate, $lt: endExclusive }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching monitoring data by date range:', error);
+            logger.error('Error fetching monitoring data by date range:', error);
             throw error;
         }
     }
@@ -73,7 +74,7 @@ class MonitoringService {
                 createdAt: { $gte: startTime, $lte: endTime }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching monitoring data by time range:', error);
+            logger.error('Error fetching monitoring data by time range:', error);
             throw error;
         }
     }

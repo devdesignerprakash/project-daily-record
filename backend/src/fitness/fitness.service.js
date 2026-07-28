@@ -1,4 +1,5 @@
 import convertToDate from "../../utils/convertToDate.js";
+import logger from "../../utils/logger.js";
 import Fitness from "./fitness.schema.js";
 
 class FitnessService {
@@ -13,7 +14,7 @@ class FitnessService {
       createData = await createData.populate('createdBy', 'fullName email designation userType');
       return createData;
     } catch (error) {
-      console.error("Error creating fitness data:", error);
+      logger.error("Error creating fitness data:", error);
       throw error;
     }
   }
@@ -32,7 +33,7 @@ class FitnessService {
       }
       return updated;
     } catch (error) {
-      console.error("Error updating fitness data:", error);
+      logger.error("Error updating fitness data:", error);
       throw error;
     }
   }
@@ -53,7 +54,7 @@ class FitnessService {
         createdAt: { $gte: startDate, $lt: endExclusive },
       }).populate('createdBy', 'fullName email designation userType');
     } catch (error) {
-      console.error("Error fetching fitness data by date range:", error);
+      logger.error("Error fetching fitness data by date range:", error);
       throw error;
     }
   }
@@ -70,7 +71,7 @@ class FitnessService {
       }).populate('createdBy', 'fullName email designation userType');
       return fitnessData;
     } catch (error) {
-      console.error("Error fetching fitness data by time range:", error);
+      logger.error("Error fetching fitness data by time range:", error);
       throw error;
     }
   }
@@ -93,7 +94,7 @@ class FitnessService {
       }).populate('createdBy', 'fullName email designation userType');
       return fitnessData;
     } catch (error) {
-      console.error("Error fetching fitness data by date:", error);
+      logger.error("Error fetching fitness data by date:", error);
       throw error;
     }
   }

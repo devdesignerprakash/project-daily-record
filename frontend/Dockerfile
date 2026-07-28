@@ -22,4 +22,8 @@ COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/src ./src
 
 EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -q --spider http://127.0.0.1:3001/ || exit 1
+
 CMD ["npm", "run", "start"]

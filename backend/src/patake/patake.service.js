@@ -1,4 +1,5 @@
 import convertToDate from '../../utils/convertToDate.js';
+import logger from '../../utils/logger.js';
 import Patake from './patake.schema.js';
 
 class PatakeService {
@@ -9,7 +10,7 @@ class PatakeService {
             created = await created.populate('createdBy', 'fullName email designation userType');
             return created;
         } catch (error) {
-            console.error('Error creating patake data:', error);
+            logger.error('Error creating patake data:', error);
             throw error;
         }
     }
@@ -24,7 +25,7 @@ class PatakeService {
             }
             return updated;
         } catch (error) {
-            console.error('Error updating patake data:', error);
+            logger.error('Error updating patake data:', error);
             throw error;
         }
     }
@@ -40,7 +41,7 @@ class PatakeService {
                 createdAt: { $gte: date, $lt: nextDay }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching patake data by date:', error);
+            logger.error('Error fetching patake data by date:', error);
             throw error;
         }
     }
@@ -58,7 +59,7 @@ class PatakeService {
                 createdAt: { $gte: startDate, $lt: endExclusive }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching patake data by date range:', error);
+            logger.error('Error fetching patake data by date range:', error);
             throw error;
         }
     }
@@ -71,7 +72,7 @@ class PatakeService {
                 createdAt: { $gte: startTime, $lte: endTime }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching patake data by time range:', error);
+            logger.error('Error fetching patake data by time range:', error);
             throw error;
         }
     }

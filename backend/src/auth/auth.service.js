@@ -19,6 +19,20 @@ import bcrypt from "bcryptjs";
         return user;
     }
 
+    static async changePassword(userId, currentPassword, newPassword) {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            throw new Error('हालको पासवर्ड मिलेन।');
+        }
+        user.password = newPassword; // pre-save hook hashes it
+        await user.save();
+        return user;
+    }
+
 }
 
 export default AuthService;

@@ -1,4 +1,5 @@
 import convertToDate from "../../utils/convertToDate.js";
+import logger from "../../utils/logger.js";
 import Roadworthiness from "./roadworthiness.schema.js";
 
 class RoadworthinessService {
@@ -15,7 +16,7 @@ class RoadworthinessService {
       createData = await createData.populate('createdBy', 'fullName email designation userType');
       return createData;
     } catch (error) {
-      console.error("Error creating roadworthiness data:", error);
+      logger.error("Error creating roadworthiness data:", error);
       throw error;
     }
   }
@@ -37,7 +38,7 @@ class RoadworthinessService {
       }
       return updated;
     } catch (error) {
-      console.error("Error updating roadworthiness data:", error);
+      logger.error("Error updating roadworthiness data:", error);
       throw error;
     }
   }
@@ -58,7 +59,7 @@ class RoadworthinessService {
         createdAt: { $gte: startDate, $lt: endExclusive },
       }).populate('createdBy', 'fullName email designation userType');
     } catch (error) {
-      console.error("Error fetching roadworthiness data by date range:", error);
+      logger.error("Error fetching roadworthiness data by date range:", error);
       throw error;
     }
   }
@@ -75,7 +76,7 @@ class RoadworthinessService {
       }).populate('createdBy', 'fullName email designation userType');
       return roadworthinessData;
     } catch (error) {
-      console.error("Error fetching roadworthiness data by time range:", error);
+      logger.error("Error fetching roadworthiness data by time range:", error);
       throw error;
     }
   }
@@ -98,7 +99,7 @@ class RoadworthinessService {
       }).populate('createdBy', 'fullName email designation userType');
       return roadworthinessData;
     } catch (error) {
-      console.error("Error fetching roadworthiness data by date:", error);
+      logger.error("Error fetching roadworthiness data by date:", error);
       throw error;
     }
   }

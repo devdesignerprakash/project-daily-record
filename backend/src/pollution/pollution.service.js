@@ -1,4 +1,5 @@
 import convertToDate from "../../utils/convertToDate.js";
+import logger from "../../utils/logger.js";
 import Pollution from "./pollution.schema.js";
 
 class PollutionService {
@@ -10,7 +11,7 @@ class PollutionService {
       createData = await createData.populate('createdBy', 'fullName email designation userType');
       return createData;
     } catch (error) {
-      console.error("Error creating pollution data:", error);
+      logger.error("Error creating pollution data:", error);
       throw error;
     }
   }
@@ -26,7 +27,7 @@ class PollutionService {
       }
       return updated;
     } catch (error) {
-      console.error("Error updating pollution data:", error);
+      logger.error("Error updating pollution data:", error);
       throw error;
     }
   }
@@ -47,7 +48,7 @@ class PollutionService {
         createdAt: { $gte: startDate, $lt: endExclusive },
       }).populate('createdBy', 'fullName email designation userType');
     } catch (error) {
-      console.error("Error fetching pollution data by date range:", error);
+      logger.error("Error fetching pollution data by date range:", error);
       throw error;
     }
   }
@@ -64,7 +65,7 @@ class PollutionService {
       }).populate('createdBy', 'fullName email designation userType');
       return pollutionData;
     } catch (error) {
-      console.error("Error fetching pollution data by time range:", error);
+      logger.error("Error fetching pollution data by time range:", error);
       throw error;
     }
   }
@@ -87,7 +88,7 @@ class PollutionService {
       }).populate('createdBy', 'fullName email designation userType');
       return pollutionData;
     } catch (error) {
-      console.error("Error fetching pollution data by date:", error);
+      logger.error("Error fetching pollution data by date:", error);
       throw error;
     }
   }

@@ -1,4 +1,5 @@
 import convertToDate from '../../utils/convertToDate.js';
+import logger from '../../utils/logger.js';
 import MechanicalTest from './mechanicalTest.schema.js';
 
 class MechanicalTestService {
@@ -9,7 +10,7 @@ class MechanicalTestService {
             created = await created.populate('createdBy', 'fullName email designation userType');
             return created;
         } catch (error) {
-            console.error('Error creating mechanical test data:', error);
+            logger.error('Error creating mechanical test data:', error);
             throw error;
         }
     }
@@ -24,7 +25,7 @@ class MechanicalTestService {
             }
             return updated;
         } catch (error) {
-            console.error('Error updating mechanical test data:', error);
+            logger.error('Error updating mechanical test data:', error);
             throw error;
         }
     }
@@ -40,7 +41,7 @@ class MechanicalTestService {
                 createdAt: { $gte: date, $lt: nextDay }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching mechanical test data by date:', error);
+            logger.error('Error fetching mechanical test data by date:', error);
             throw error;
         }
     }
@@ -58,7 +59,7 @@ class MechanicalTestService {
                 createdAt: { $gte: startDate, $lt: endExclusive }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching mechanical test data by date range:', error);
+            logger.error('Error fetching mechanical test data by date range:', error);
             throw error;
         }
     }
@@ -71,7 +72,7 @@ class MechanicalTestService {
                 createdAt: { $gte: startTime, $lte: endTime }
             }).populate('createdBy', 'fullName email designation userType');
         } catch (error) {
-            console.error('Error fetching mechanical test data by time range:', error);
+            logger.error('Error fetching mechanical test data by time range:', error);
             throw error;
         }
     }

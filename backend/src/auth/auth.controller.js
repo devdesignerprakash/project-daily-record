@@ -50,5 +50,21 @@ class AuthController{
         res.clearCookie('token', COOKIE_OPTIONS)
         res.status(200).json({message:'Logged out successfully'})
     }
+
+    static async changePassword(req,res){
+        try{
+            const {currentPassword,newPassword}=req.body
+            if(!currentPassword || !newPassword){
+                return res.status(400).json({message:'हालको र नयाँ पासवर्ड दुवै आवश्यक छ।'})
+            }
+            if(newPassword.length < 6){
+                return res.status(400).json({message:'नयाँ पासवर्ड कम्तिमा ६ अक्षरको हुनुपर्छ।'})
+            }
+            await AuthService.changePassword(req.user.id,currentPassword,newPassword)
+            res.status(200).json({message:'पासवर्ड सफलतापूर्वक परिवर्तन भयो।'})
+        }catch(error){
+            res.status(400).json({message:error.message})
+        }
+    }
 }
 export default AuthController;
