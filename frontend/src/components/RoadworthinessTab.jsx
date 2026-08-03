@@ -24,18 +24,23 @@ import { PlusCircle, Calendar, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
 
-export default function RoadworthinessTab({ records, onSuccess, onError }) {
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+export default function RoadworthinessTab({ records, isAdmin, onSuccess, onError }) {
   const [count, setCount] = useState("");
+  const [date, setDate] = useState(todayStr());
   const [editingId, setEditingId] = useState(null);
 
   const startEdit = (row) => {
     setEditingId(row._id);
     setCount(String(row.roadworthiness_test_done ?? ""));
+    setDate(todayStr());
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setCount("");
+    setDate(todayStr());
   };
 
   const handleSubmit = async (e) => {
@@ -53,11 +58,13 @@ export default function RoadworthinessTab({ records, onSuccess, onError }) {
       } else {
         await api.post("/api/roadworthiness", {
           isroadwrothiss_test_done: count,
+          date,
         });
         onSuccess("सडक योग्यता डाटा सफलतापूर्वक रेकर्ड भयो!");
       }
       setEditingId(null);
       setCount("");
+      setDate(todayStr());
     } catch (err) {
       onError(err.message);
     }
@@ -78,6 +85,22 @@ export default function RoadworthinessTab({ records, onSuccess, onError }) {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {isAdmin && !editingId && (
+              <div className="space-y-2">
+                <Label htmlFor="road-date" className="text-xs font-semibold">
+                  मिति (Date) — पुरानो मितिको लागि परिवर्तन गर्न सकिन्छ
+                </Label>
+                <Input
+                  id="road-date"
+                  type="date"
+                  max={todayStr()}
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="road-count" className="text-xs font-semibold">
                 सडक योग्यता परीक्षा संख्या (Count)

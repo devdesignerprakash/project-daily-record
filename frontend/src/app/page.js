@@ -401,25 +401,25 @@ export default function Home() {
             {/* ── Tab content panels ── */}
             {hasModule("fitness") && (
               <TabsContent value="fitness">
-                <FitnessTab records={recentFitness} onSuccess={handleSuccess} onError={showError} />
+                <FitnessTab records={recentFitness} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
 
             {hasModule("routePermit") && (
               <TabsContent value="routePermit">
-                <RoutePermitTab records={recentRoutePermits} onSuccess={handleSuccess} onError={showError} />
+                <RoutePermitTab records={recentRoutePermits} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
 
             {hasModule("roadworthiness") && (
               <TabsContent value="roadworthiness">
-                <RoadworthinessTab records={recentRoadworth} onSuccess={handleSuccess} onError={showError} />
+                <RoadworthinessTab records={recentRoadworth} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
 
             {hasModule("pollution") && (
               <TabsContent value="pollution">
-                <PollutionTab records={recentPollution} onSuccess={handleSuccess} onError={showError} />
+                <PollutionTab records={recentPollution} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
 
@@ -431,31 +431,31 @@ export default function Home() {
 
             {hasModule("mechanicalTest") && (
               <TabsContent value="mechanicalTest">
-                <MechanicalTestTab records={recentMechanicalTest} onSuccess={handleSuccess} onError={showError} />
+                <MechanicalTestTab records={recentMechanicalTest} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
 
             {hasModule("patake") && (
               <TabsContent value="patake">
-                <PatakeTab records={recentPatake} onSuccess={handleSuccess} onError={showError} />
+                <PatakeTab records={recentPatake} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
 
             {hasModule("starkayam") && (
               <TabsContent value="starkayam">
-                <StarkayamTab records={recentStarkayam} onSuccess={handleSuccess} onError={showError} />
+                <StarkayamTab records={recentStarkayam} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
 
             {hasModule("monitoring") && (
               <TabsContent value="monitoring">
-                <MonitoringTab records={recentMonitoring} onSuccess={handleSuccess} onError={showError} />
+                <MonitoringTab records={recentMonitoring} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
 
             {hasModule("transportRegistration") && (
               <TabsContent value="transportRegistration">
-                <TransportRegistrationTab records={recentTransportReg} onSuccess={handleSuccess} onError={showError} />
+                <TransportRegistrationTab records={recentTransportReg} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
 

@@ -24,18 +24,20 @@ import { PlusCircle, Calendar, Wrench, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
 
-export default function MechanicalTestTab({ records, onSuccess, onError }) {
-  const [form, setForm] = useState({ count: "" });
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+export default function MechanicalTestTab({ records, isAdmin, onSuccess, onError }) {
+  const [form, setForm] = useState({ count: "", date: todayStr() });
   const [editingId, setEditingId] = useState(null);
 
   const startEdit = (row) => {
     setEditingId(row._id);
-    setForm({ count: String(row.count ?? "") });
+    setForm({ count: String(row.count ?? ""), date: todayStr() });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm({ count: "" });
+    setForm({ count: "", date: todayStr() });
   };
 
   const handleSubmit = async (e) => {
@@ -53,7 +55,7 @@ export default function MechanicalTestTab({ records, onSuccess, onError }) {
         onSuccess("यान्त्रिक परीक्षण डाटा सफलतापूर्वक रेकर्ड भयो!");
       }
       setEditingId(null);
-      setForm({ count: "" });
+      setForm({ count: "", date: todayStr() });
     } catch (err) {
       onError(err.message);
     }
@@ -74,6 +76,22 @@ export default function MechanicalTestTab({ records, onSuccess, onError }) {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {isAdmin && !editingId && (
+              <div className="space-y-2">
+                <Label htmlFor="mech-date" className="text-xs font-semibold">
+                  मिति (Date) — पुरानो मितिको लागि परिवर्तन गर्न सकिन्छ
+                </Label>
+                <Input
+                  id="mech-date"
+                  type="date"
+                  max={todayStr()}
+                  required
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="mech-count" className="text-xs font-semibold">
                 यान्त्रिक परीक्षण संख्या (Count)

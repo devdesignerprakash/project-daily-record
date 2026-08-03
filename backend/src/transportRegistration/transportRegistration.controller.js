@@ -1,10 +1,12 @@
 import TransportRegistrationService from './transportRegistration.service.js';
+import applyBackdate from '../../utils/applyBackdate.js';
 
 class TransportRegistrationController {
     static async createTransportRegistrationData(req, res) {
         try {
             const userId = req.user?.id;
-            const data = await TransportRegistrationService.createTransportRegistrationData({ ...req.body, createdBy: userId });
+            const payload = applyBackdate(req, { ...req.body, createdBy: userId });
+            const data = await TransportRegistrationService.createTransportRegistrationData(payload);
             res.status(201).json({ message: 'Transport registration data created successfully', data });
         } catch (error) {
             res.status(400).json({ message: error.message });

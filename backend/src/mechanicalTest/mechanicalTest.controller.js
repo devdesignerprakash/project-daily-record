@@ -1,10 +1,12 @@
 import MechanicalTestService from './mechanicalTest.service.js';
+import applyBackdate from '../../utils/applyBackdate.js';
 
 class MechanicalTestController {
     static async createMechanicalTestData(req, res) {
         try {
             const userId = req.user?.id;
-            const data = await MechanicalTestService.createMechanicalTestData({ ...req.body, createdBy: userId });
+            const payload = applyBackdate(req, { ...req.body, createdBy: userId });
+            const data = await MechanicalTestService.createMechanicalTestData(payload);
             res.status(201).json({ message: 'Mechanical test data created successfully', data });
         } catch (error) {
             res.status(400).json({ message: error.message });

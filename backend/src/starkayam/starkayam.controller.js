@@ -1,10 +1,12 @@
 import StarkayamService from './starkayam.service.js';
+import applyBackdate from '../../utils/applyBackdate.js';
 
 class StarkayamController {
     static async createStarkayamData(req, res) {
         try {
             const userId = req.user?.id;
-            const data = await StarkayamService.createStarkayamData({ ...req.body, createdBy: userId });
+            const payload = applyBackdate(req, { ...req.body, createdBy: userId });
+            const data = await StarkayamService.createStarkayamData(payload);
             res.status(201).json({ message: 'Starkayam data created successfully', data });
         } catch (error) {
             res.status(400).json({ message: error.message });

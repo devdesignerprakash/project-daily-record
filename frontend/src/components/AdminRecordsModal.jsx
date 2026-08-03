@@ -19,6 +19,12 @@ const sumField = (arr, field) => (arr || []).reduce((s, r) => s + (Number(r[fiel
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
+const yesterdayStr = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+};
+
 // Same तपसिल row mapping used by the official letter (LetterModal) —
 // keeps this admin summary and the printed letter consistent.
 const buildRows = (data) => {
@@ -81,11 +87,40 @@ const buildRows = (data) => {
   ];
 };
 
+// Builds one तपसिल block (title + subheader + 9 rows + total row) as an
+// array-of-arrays, ready to be concatenated into a single sheet.
+const buildBlock = (rows, titleLine) => {
+  const naya      = rows.reduce((s, r) => s + (r.naya || 0), 0);
+  const nabikaran = rows.reduce((s, r) => s + (r.nabikaran || 0), 0);
+
+  return [
+    ["सि.नं.", "क्रियाकलाप/विवरण (संख्या)", titleLine, "", ""],
+    ["", "", "नयाँ", "नवीकरण", "जम्मा"],
+    ...rows.map((row) => [
+      row.sn,
+      row.name,
+      row.naya || 0,
+      row.nabikaran || 0,
+      (row.naya || 0) + (row.nabikaran || 0),
+    ]),
+    ["", "जम्मा", naya, nabikaran, naya + nabikaran],
+  ];
+};
+
+// Merge spec (सि.नं./activity column-span + title row-span) for a block
+// starting at sheet row `startRow`.
+const blockMerges = (startRow) => [
+  { s: { r: startRow, c: 0 }, e: { r: startRow + 1, c: 0 } },
+  { s: { r: startRow, c: 1 }, e: { r: startRow + 1, c: 1 } },
+  { s: { r: startRow, c: 2 }, e: { r: startRow, c: 4 } },
+];
+
 export default function AdminRecordsModal({ isOpen, onClose }) {
   const [fromDate, setFromDate] = useState(todayStr());
   const [toDate, setToDate]     = useState(todayStr());
   const [rows, setRows]         = useState([]);
   const [loading, setLoading]   = useState(false);
+  const [prevDayLoading, setPrevDayLoading] = useState(false);
   const [error, setError]       = useState("");
 
   const fetchRecords = useCallback(async (from, to) => {
@@ -152,6 +187,47 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
     XLSX.writeFile(wb, `all-modules-${fromDate}-to-${toDate}.xlsx`);
   };
 
+  // Independent of the from/to range picker above — always the previous
+  // calendar day's तपसिल block, then a 4-row gap, then today's block, in a
+  // single sheet using the same layout as the plain Excel export.
+  const downloadExcelWithPreviousDay = async () => {
+    setPrevDayLoading(true);
+    setError("");
+    try {
+      const yesterday = yesterdayStr();
+      const today = todayStr();
+      const [prevRes, todayRes] = await Promise.all([
+        api.get("/api/admin/records-by-range", { params: { startDate: yesterday, endDate: yesterday } }),
+        api.get("/api/admin/records-by-range", { params: { startDate: today, endDate: today } }),
+      ]);
+
+      const blockA = buildBlock(
+        buildRows(prevRes.data),
+        `सवारी परीक्षण कार्यालय टेकु, मिति ${yesterday} (अघिल्लो दिन)`
+      );
+      const blankRow = ["", "", "", "", ""];
+      const blockB = buildBlock(
+        buildRows(todayRes.data),
+        `सवारी परीक्षण कार्यालय टेकु, मिति ${today} (आजको दिन)`
+      );
+      const blockBStart = blockA.length + 4;
+
+      const aoa = [...blockA, blankRow, blankRow, blankRow, blankRow, ...blockB];
+
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws["!merges"] = [...blockMerges(0), ...blockMerges(blockBStart)];
+      ws["!cols"] = [{ wch: 6 }, { wch: 40 }, { wch: 12 }, { wch: 12 }, { wch: 10 }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "तपसिल");
+      XLSX.writeFile(wb, `all-modules-prev-and-today-${yesterday}_${today}.xlsx`);
+    } catch (err) {
+      setError(err.message || "एक्सेल डाउनलोड गर्न समस्या भयो।");
+    } finally {
+      setPrevDayLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -216,6 +292,16 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
           >
             <FileSpreadsheet className="w-4 h-4 shrink-0" />
             एक्सेल डाउनलोड
+          </Button>
+          <Button
+            variant="outline"
+            onClick={downloadExcelWithPreviousDay}
+            disabled={prevDayLoading}
+            title="अघिल्लो दिनको तपसिल माथि, ४ लाइन खाली छोडेर आजको तपसिल तल — एउटै एक्सेलमा"
+            className="text-sm border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-400 flex items-center gap-1.5"
+          >
+            {prevDayLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 shrink-0" />}
+            अघिल्लो दिनको डाटा सहित एक्सेल
           </Button>
         </div>
 

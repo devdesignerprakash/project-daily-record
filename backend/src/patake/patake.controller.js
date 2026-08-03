@@ -1,10 +1,12 @@
 import PatakeService from './patake.service.js';
+import applyBackdate from '../../utils/applyBackdate.js';
 
 class PatakeController {
     static async createPatakeData(req, res) {
         try {
             const userId = req.user?.id;
-            const data = await PatakeService.createPatakeData({ ...req.body, createdBy: userId });
+            const payload = applyBackdate(req, { ...req.body, createdBy: userId });
+            const data = await PatakeService.createPatakeData(payload);
             res.status(201).json({ message: 'Patake data created successfully', data });
         } catch (error) {
             res.status(400).json({ message: error.message });

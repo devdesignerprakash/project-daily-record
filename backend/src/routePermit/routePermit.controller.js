@@ -1,10 +1,12 @@
 import RoutePermitService from "./routePermit.service.js";
+import applyBackdate from "../../utils/applyBackdate.js";
 
 class RoutePermitController{
      static async createRoutePermitData(req, res) {
         try {
             const userId = req.user?.id;
-            const routePermitData = await RoutePermitService.createRoutePermitData({ ...req.body, createdBy: userId });
+            const data = applyBackdate(req, { ...req.body, createdBy: userId });
+            const routePermitData = await RoutePermitService.createRoutePermitData(data);
             res.status(201).json({ message: 'Route permit data created successfully', data: routePermitData });
         } catch (error) {
             res.status(400).json({ message: error.message });

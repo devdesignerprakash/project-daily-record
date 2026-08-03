@@ -1,10 +1,12 @@
 import FitnessService from "./fitness.service.js";
+import applyBackdate from "../../utils/applyBackdate.js";
 
 class FitnessController{
      static async createFitnessData(req, res) {
         try {
             const userId = req.user?.id;
-            const fitnessData = await FitnessService.createFitnessData({ ...req.body, createdBy: userId });
+            const data = applyBackdate(req, { ...req.body, createdBy: userId });
+            const fitnessData = await FitnessService.createFitnessData(data);
             res.status(201).json({ message: 'Fitness data created successfully', data: fitnessData });
         } catch (error) {
             res.status(400).json({ message: error.message });

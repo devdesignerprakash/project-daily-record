@@ -1,10 +1,12 @@
 import PollutionService from "./pollution.service.js";
+import applyBackdate from "../../utils/applyBackdate.js";
 
 class PollutionController {
   static async createPollutionData(req, res) {
     try {
       const userId = req.user?.id;
-      const pollutionData = await PollutionService.createPollutionData({ ...req.body, createdBy: userId });
+      const data = applyBackdate(req, { ...req.body, createdBy: userId });
+      const pollutionData = await PollutionService.createPollutionData(data);
       res.status(201).json({ message: 'Pollution data created successfully', data: pollutionData });
     } catch (error) {
       res.status(400).json({ message: error.message });

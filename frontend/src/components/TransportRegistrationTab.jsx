@@ -24,8 +24,10 @@ import { PlusCircle, Calendar, Bus, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
 
-export default function TransportRegistrationTab({ records, onSuccess, onError }) {
-  const [form, setForm] = useState({ naya: "", nabikaran: "", thap: "" });
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+export default function TransportRegistrationTab({ records, isAdmin, onSuccess, onError }) {
+  const [form, setForm] = useState({ naya: "", nabikaran: "", thap: "", date: todayStr() });
   const [editingId, setEditingId] = useState(null);
 
   const startEdit = (row) => {
@@ -34,12 +36,13 @@ export default function TransportRegistrationTab({ records, onSuccess, onError }
       naya: String(row.naya ?? ""),
       nabikaran: String(row.nabikaran ?? ""),
       thap: String(row.thap ?? ""),
+      date: todayStr(),
     });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm({ naya: "", nabikaran: "", thap: "" });
+    setForm({ naya: "", nabikaran: "", thap: "", date: todayStr() });
   };
 
   const handleSubmit = async (e) => {
@@ -57,7 +60,7 @@ export default function TransportRegistrationTab({ records, onSuccess, onError }
         onSuccess("यातायात सेवा पञ्जीकरण डाटा सफलतापूर्वक रेकर्ड भयो!");
       }
       setEditingId(null);
-      setForm({ naya: "", nabikaran: "", thap: "" });
+      setForm({ naya: "", nabikaran: "", thap: "", date: todayStr() });
     } catch (err) {
       onError(err.message);
     }
@@ -78,6 +81,22 @@ export default function TransportRegistrationTab({ records, onSuccess, onError }
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {isAdmin && !editingId && (
+              <div className="space-y-2">
+                <Label htmlFor="tr-date" className="text-xs font-semibold">
+                  मिति (Date) — पुरानो मितिको लागि परिवर्तन गर्न सकिन्छ
+                </Label>
+                <Input
+                  id="tr-date"
+                  type="date"
+                  max={todayStr()}
+                  required
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="tr-naya" className="text-xs font-semibold">
                 नयाँ (New)

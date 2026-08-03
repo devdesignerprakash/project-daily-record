@@ -24,8 +24,10 @@ import { PlusCircle, Calendar, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
 
-export default function FitnessTab({ records, onSuccess, onError }) {
-  const [form, setForm] = useState({ naya: "", nabikaran: "", pratilipi: "" });
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+export default function FitnessTab({ records, isAdmin, onSuccess, onError }) {
+  const [form, setForm] = useState({ naya: "", nabikaran: "", pratilipi: "", date: todayStr() });
   const [editingId, setEditingId] = useState(null);
 
   const startEdit = (row) => {
@@ -34,12 +36,13 @@ export default function FitnessTab({ records, onSuccess, onError }) {
       naya: String(row.naya ?? ""),
       nabikaran: String(row.nabikaran ?? ""),
       pratilipi: String(row.pratilipi ?? ""),
+      date: todayStr(),
     });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm({ naya: "", nabikaran: "", pratilipi: "" });
+    setForm({ naya: "", nabikaran: "", pratilipi: "", date: todayStr() });
   };
 
   const handleSubmit = async (e) => {
@@ -57,7 +60,7 @@ export default function FitnessTab({ records, onSuccess, onError }) {
         onSuccess("सवारी फिटनेस डाटा सफलतापूर्वक रेकर्ड भयो!");
       }
       setEditingId(null);
-      setForm({ naya: "", nabikaran: "", pratilipi: "" });
+      setForm({ naya: "", nabikaran: "", pratilipi: "", date: todayStr() });
     } catch (err) {
       onError(err.message);
     }
@@ -78,6 +81,22 @@ export default function FitnessTab({ records, onSuccess, onError }) {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {isAdmin && !editingId && (
+              <div className="space-y-2">
+                <Label htmlFor="fit-date" className="text-xs font-semibold">
+                  मिति (Date) — पुरानो मितिको लागि परिवर्तन गर्न सकिन्छ
+                </Label>
+                <Input
+                  id="fit-date"
+                  type="date"
+                  max={todayStr()}
+                  required
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="fit-naya" className="text-xs font-semibold">
                 नयाँ दर्ता (New Count)

@@ -24,18 +24,20 @@ import { PlusCircle, Calendar, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
 
-export default function PollutionTab({ records, onSuccess, onError }) {
-  const [form, setForm] = useState({ pass: "", fail: "" });
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+export default function PollutionTab({ records, isAdmin, onSuccess, onError }) {
+  const [form, setForm] = useState({ pass: "", fail: "", date: todayStr() });
   const [editingId, setEditingId] = useState(null);
 
   const startEdit = (row) => {
     setEditingId(row._id);
-    setForm({ pass: String(row.pass ?? ""), fail: String(row.fail ?? "") });
+    setForm({ pass: String(row.pass ?? ""), fail: String(row.fail ?? ""), date: todayStr() });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm({ pass: "", fail: "" });
+    setForm({ pass: "", fail: "", date: todayStr() });
   };
 
   const handleSubmit = async (e) => {
@@ -53,7 +55,7 @@ export default function PollutionTab({ records, onSuccess, onError }) {
         onSuccess("प्रदुषण परीक्षण डाटा सफलतापूर्वक रेकर्ड भयो!");
       }
       setEditingId(null);
-      setForm({ pass: "", fail: "" });
+      setForm({ pass: "", fail: "", date: todayStr() });
     } catch (err) {
       onError(err.message);
     }
@@ -74,6 +76,22 @@ export default function PollutionTab({ records, onSuccess, onError }) {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {isAdmin && !editingId && (
+              <div className="space-y-2">
+                <Label htmlFor="pol-date" className="text-xs font-semibold">
+                  मिति (Date) — पुरानो मितिको लागि परिवर्तन गर्न सकिन्छ
+                </Label>
+                <Input
+                  id="pol-date"
+                  type="date"
+                  max={todayStr()}
+                  required
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="pol-pass" className="text-xs font-semibold">
                 पास संख्या (Passed Count)

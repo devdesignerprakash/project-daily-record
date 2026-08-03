@@ -24,18 +24,20 @@ import { PlusCircle, Calendar, Factory, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
 
-export default function MonitoringTab({ records, onSuccess, onError }) {
-  const [form, setForm] = useState({ naya: "", nabikaran: "" });
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+export default function MonitoringTab({ records, isAdmin, onSuccess, onError }) {
+  const [form, setForm] = useState({ naya: "", nabikaran: "", date: todayStr() });
   const [editingId, setEditingId] = useState(null);
 
   const startEdit = (row) => {
     setEditingId(row._id);
-    setForm({ naya: String(row.naya ?? ""), nabikaran: String(row.nabikaran ?? "") });
+    setForm({ naya: String(row.naya ?? ""), nabikaran: String(row.nabikaran ?? ""), date: todayStr() });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm({ naya: "", nabikaran: "" });
+    setForm({ naya: "", nabikaran: "", date: todayStr() });
   };
 
   const handleSubmit = async (e) => {
@@ -53,7 +55,7 @@ export default function MonitoringTab({ records, onSuccess, onError }) {
         onSuccess("अनुगमन डाटा सफलतापूर्वक रेकर्ड भयो!");
       }
       setEditingId(null);
-      setForm({ naya: "", nabikaran: "" });
+      setForm({ naya: "", nabikaran: "", date: todayStr() });
     } catch (err) {
       onError(err.message);
     }
@@ -74,6 +76,22 @@ export default function MonitoringTab({ records, onSuccess, onError }) {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {isAdmin && !editingId && (
+              <div className="space-y-2">
+                <Label htmlFor="mon-date" className="text-xs font-semibold">
+                  मिति (Date) — पुरानो मितिको लागि परिवर्तन गर्न सकिन्छ
+                </Label>
+                <Input
+                  id="mon-date"
+                  type="date"
+                  max={todayStr()}
+                  required
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="mon-naya" className="text-xs font-semibold">
                 नयाँ (New)

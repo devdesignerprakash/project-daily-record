@@ -1,10 +1,12 @@
 import RoadworthinessService from "./roadworthiness.service.js";
+import applyBackdate from "../../utils/applyBackdate.js";
 
 class RoadworthinessController{
      static async createRoadworthinessData(req, res) {
         try {
             const userId = req.user?.id;
-            const roadworthinessData = await RoadworthinessService.createRoadworthinessData({ ...req.body, createdBy: userId });
+            const data = applyBackdate(req, { ...req.body, createdBy: userId });
+            const roadworthinessData = await RoadworthinessService.createRoadworthinessData(data);
             res.status(201).json({ message: 'Roadworthiness data created successfully', data: roadworthinessData });
         } catch (error) {
             res.status(400).json({ message: error.message });

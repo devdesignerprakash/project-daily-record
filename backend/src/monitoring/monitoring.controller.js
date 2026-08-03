@@ -1,10 +1,12 @@
 import MonitoringService from './monitoring.service.js';
+import applyBackdate from '../../utils/applyBackdate.js';
 
 class MonitoringController {
     static async createMonitoringData(req, res) {
         try {
             const userId = req.user?.id;
-            const data = await MonitoringService.createMonitoringData({ ...req.body, createdBy: userId });
+            const payload = applyBackdate(req, { ...req.body, createdBy: userId });
+            const data = await MonitoringService.createMonitoringData(payload);
             res.status(201).json({ message: 'Monitoring data created successfully', data });
         } catch (error) {
             res.status(400).json({ message: error.message });
