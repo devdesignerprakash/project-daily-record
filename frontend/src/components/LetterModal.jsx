@@ -494,7 +494,7 @@ export default function LetterModal({ isOpen, onClose }) {
       {/* ── Print styles ── */}
       <style jsx global>{`
         @media print {
-          @page { size: A4; margin: 10mm; }
+          @page { size: A4; margin: 0; }
 
           /* Hide the rest of the app — printing only the letter itself.
              (position:fixed/sticky ancestors get repeated on every printed
