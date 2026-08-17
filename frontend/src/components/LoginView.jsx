@@ -63,7 +63,7 @@ export default function LoginView({
                   id="login-email"
                   type="email"
                   required
-                  placeholder="email@example.com"
+                  placeholder="user@vftc.gov.np"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   className="bg-white/5 border-white/10 text-white placeholder-zinc-500 focus:border-red-500 focus:ring-red-500/20 text-sm"

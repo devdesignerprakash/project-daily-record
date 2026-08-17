@@ -45,7 +45,7 @@ export default function Home() {
   const dispatch = useDispatch();
   const user        = useSelector((state) => state.auth.user);
   const initialized = useSelector((state) => state.auth.initialized);
-  const [loginEmail,    setLoginEmail]    = useState("john@example.com");
+  const [loginEmail,    setLoginEmail]    = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [authError,     setAuthError]     = useState("");
   const [authLoading,   setAuthLoading]   = useState(false);

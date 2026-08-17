@@ -8,6 +8,21 @@ import StarkayamService from '../starkayam/starkayam.service.js';
 import MonitoringService from '../monitoring/monitoring.service.js';
 import TransportRegistrationService from '../transportRegistration/transportRegistration.service.js';
 
+import Fitness from '../fitness/fitness.schema.js';
+import RoutePermit from '../routePermit/routePermit.schema.js';
+import Roadworthiness from '../roadworthiness/roadworthiness.schema.js';
+import Pollution from '../pollution/pollution.schema.js';
+import MechanicalTest from '../mechanicalTest/mechanicalTest.schema.js';
+import Patake from '../patake/patake.schema.js';
+import Starkayam from '../starkayam/starkayam.schema.js';
+import Monitoring from '../monitoring/monitoring.schema.js';
+import TransportRegistration from '../transportRegistration/transportRegistration.schema.js';
+
+const ALL_MODELS = [
+    Fitness, RoutePermit, Roadworthiness, Pollution, MechanicalTest,
+    Patake, Starkayam, Monitoring, TransportRegistration,
+];
+
 class AdminService {
     static async getAllModuleRecordsByDate(dateString) {
         const [
@@ -79,6 +94,32 @@ class AdminService {
             monitoring,
             transportRegistration,
         };
+    }
+
+    // Most recent calendar date (across all modules) that has any data
+    // entered before today — i.e. "yesterday" in the sense of the last
+    // day someone actually recorded something, not necessarily the
+    // literal previous calendar day (accounts for weekends/holidays with
+    // no entries at all).
+    static async getLastEntryDate() {
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const latestDocs = await Promise.all(
+            ALL_MODELS.map((Model) =>
+                Model.findOne({ createdAt: { $lt: startOfToday } })
+                    .sort({ createdAt: -1 })
+                    .select('createdAt')
+                    .lean()
+            )
+        );
+
+        const timestamps = latestDocs.filter(Boolean).map((doc) => doc.createdAt.getTime());
+        if (timestamps.length === 0) {
+            return null;
+        }
+
+        return new Date(Math.max(...timestamps));
     }
 }
 

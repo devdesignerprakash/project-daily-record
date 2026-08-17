@@ -19,12 +19,6 @@ const sumField = (arr, field) => (arr || []).reduce((s, r) => s + (Number(r[fiel
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
-const yesterdayStr = () => {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0, 10);
-};
-
 // Same तपसिल row mapping used by the official letter (LetterModal) —
 // keeps this admin summary and the printed letter consistent.
 const buildRows = (data) => {
@@ -187,23 +181,31 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
     XLSX.writeFile(wb, `all-modules-${fromDate}-to-${toDate}.xlsx`);
   };
 
-  // Independent of the from/to range picker above — always the previous
-  // calendar day's तपसिल block, then a 4-row gap, then today's block, in a
-  // single sheet using the same layout as the plain Excel export.
+  // Independent of the from/to range picker above. "Previous day" means the
+  // last calendar date (before today) that actually has any data recorded —
+  // not necessarily yesterday, since weekends/holidays may have no entries
+  // at all. That block goes on top, then a 4-row gap, then today's block,
+  // in a single sheet using the same layout as the plain Excel export.
   const downloadExcelWithPreviousDay = async () => {
     setPrevDayLoading(true);
     setError("");
     try {
-      const yesterday = yesterdayStr();
+      const lastEntryRes = await api.get("/api/admin/last-entry-date");
+      const previousDate = lastEntryRes.date;
+      if (!previousDate) {
+        setError("अघिल्लो कुनै पनि मितिमा डाटा फेला परेन।");
+        return;
+      }
+
       const today = todayStr();
       const [prevRes, todayRes] = await Promise.all([
-        api.get("/api/admin/records-by-range", { params: { startDate: yesterday, endDate: yesterday } }),
+        api.get("/api/admin/records-by-range", { params: { startDate: previousDate, endDate: previousDate } }),
         api.get("/api/admin/records-by-range", { params: { startDate: today, endDate: today } }),
       ]);
 
       const blockA = buildBlock(
         buildRows(prevRes.data),
-        `सवारी परीक्षण कार्यालय टेकु, मिति ${yesterday} (अघिल्लो दिन)`
+        `सवारी परीक्षण कार्यालय टेकु, मिति ${previousDate} (अघिल्लो प्रविष्टि मिति)`
       );
       const blankRow = ["", "", "", "", ""];
       const blockB = buildBlock(
@@ -220,7 +222,7 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "तपसिल");
-      XLSX.writeFile(wb, `all-modules-prev-and-today-${yesterday}_${today}.xlsx`);
+      XLSX.writeFile(wb, `all-modules-prev-and-today-${previousDate}_${today}.xlsx`);
     } catch (err) {
       setError(err.message || "एक्सेल डाउनलोड गर्न समस्या भयो।");
     } finally {
@@ -254,7 +256,7 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
         </div>
 
         {/* ── Date range picker ── */}
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-zinc-400">देखि मिति (From)</label>
             <Input

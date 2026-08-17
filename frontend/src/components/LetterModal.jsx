@@ -241,15 +241,17 @@ export default function LetterModal({ isOpen, onClose }) {
           >
 
             {/* ═══════════════════════════════════════
-                LETTERHEAD IMAGE
+                LETTERHEAD IMAGE — edge-to-edge, full page width,
+                height scales proportionally with the image's aspect ratio.
             ═══════════════════════════════════════ */}
-            <div className="letterhead-img-wrapper relative w-full" style={{ height: "175px" }}>
+            <div className="letterhead-img-wrapper w-full">
               <Image
                 src="/letterhead.png"
                 alt="Official Letterhead — सवारी परीक्षण कार्यालय"
-                fill
+                width={789}
+                height={196}
                 sizes="(max-width: 800px) 100vw, 794px"
-                className="object-contain object-top"
+                className="w-full h-auto block"
                 priority
               />
             </div>
@@ -538,7 +540,6 @@ export default function LetterModal({ isOpen, onClose }) {
           }
 
           /* ── compact spacing so the letter fits a single printed page ── */
-          #printable-letter .letterhead-img-wrapper { height: 130px !important; }
           #printable-letter .px-10 { padding-left: 26px !important; padding-right: 26px !important; }
           #printable-letter .pb-10 { padding-bottom: 16px !important; }
           #printable-letter .pb-8 { padding-bottom: 12px !important; }

@@ -23,6 +23,18 @@ class AdminController {
             res.status(400).json({ message: error.message });
         }
     }
+
+    static async getLastEntryDate(req, res) {
+        try {
+            const lastDate = await AdminService.getLastEntryDate();
+            res.status(200).json({
+                message: 'Last entry date fetched successfully',
+                date: lastDate ? lastDate.toISOString().slice(0, 10) : null,
+            });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
 }
 
 export default AdminController;
