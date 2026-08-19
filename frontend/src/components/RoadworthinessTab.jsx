@@ -23,6 +23,7 @@ import {
 import { PlusCircle, Calendar, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
+import NepaliDatePickerField from "@/components/ui/NepaliDatePickerField";
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -90,14 +91,11 @@ export default function RoadworthinessTab({ records, isAdmin, onSuccess, onError
                 <Label htmlFor="road-date" className="text-xs font-semibold">
                   मिति (Date) — पुरानो मितिको लागि परिवर्तन गर्न सकिन्छ
                 </Label>
-                <Input
+                <NepaliDatePickerField
                   id="road-date"
-                  type="date"
                   max={todayStr()}
-                  required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
                 />
               </div>
             )}

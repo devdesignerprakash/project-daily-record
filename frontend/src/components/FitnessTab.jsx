@@ -20,14 +20,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Calendar, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
+import NepaliDatePickerField from "@/components/ui/NepaliDatePickerField";
+import { CirclePlus,Calendar } from "lucide-react";
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
 export default function FitnessTab({ records, isAdmin, onSuccess, onError }) {
-  const [form, setForm] = useState({ naya: "", nabikaran: "", pratilipi: "", date: todayStr() });
+  const [form, setForm] = useState({
+    naya: "",
+    nabikaran: "",
+    pratilipi: "",
+    date: todayStr(),
+  });
   const [editingId, setEditingId] = useState(null);
 
   const startEdit = (row) => {
@@ -72,11 +78,19 @@ export default function FitnessTab({ records, isAdmin, onSuccess, onError }) {
       <Card className="lg:col-span-1 border border-slate-200 dark:border-zinc-800 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2">
-            {editingId ? <Pencil className="w-4 h-4 text-amber-600" /> : <PlusCircle className="w-4 h-4 text-blue-600" />}
-            {editingId ? "प्रविष्टि सम्पादन (Edit Entry)" : "नयाँ प्रविष्टि (New Entry)"}
+            {editingId ? (
+              <Pencil className="w-4 h-4 text-amber-600" />
+            ) : (
+              <CirclePlus className="w-4 h-4 text-blue-600" />
+            )}
+            {editingId
+              ? "प्रविष्टि सम्पादन (Edit Entry)"
+              : "नयाँ प्रविष्टि (New Entry)"}
           </CardTitle>
           <CardDescription className="text-xs">
-            {editingId ? "छानिएको रेकर्ड सम्पादन गरी पुन: सबमिट गर्नुहोस्" : "दैनिक सवारी फिटनेस परिक्षण दर्ता गर्नुहोस्"}
+            {editingId
+              ? "छानिएको रेकर्ड सम्पादन गरी पुन: सबमिट गर्नुहोस्"
+              : "दैनिक सवारी फिटनेस परिक्षण दर्ता गर्नुहोस्"}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -86,14 +100,11 @@ export default function FitnessTab({ records, isAdmin, onSuccess, onError }) {
                 <Label htmlFor="fit-date" className="text-xs font-semibold">
                   मिति (Date) — पुरानो मितिको लागि परिवर्तन गर्न सकिन्छ
                 </Label>
-                <Input
+                <NepaliDatePickerField
                   id="fit-date"
-                  type="date"
                   max={todayStr()}
-                  required
                   value={form.date}
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
                 />
               </div>
             )}
@@ -121,7 +132,9 @@ export default function FitnessTab({ records, isAdmin, onSuccess, onError }) {
                 min="0"
                 required
                 value={form.nabikaran}
-                onChange={(e) => setForm({ ...form, nabikaran: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, nabikaran: e.target.value })
+                }
                 className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
               />
             </div>
@@ -134,7 +147,9 @@ export default function FitnessTab({ records, isAdmin, onSuccess, onError }) {
                 type="number"
                 min="0"
                 value={form.pratilipi}
-                onChange={(e) => setForm({ ...form, pratilipi: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, pratilipi: e.target.value })
+                }
                 className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
               />
             </div>
@@ -154,7 +169,9 @@ export default function FitnessTab({ records, isAdmin, onSuccess, onError }) {
               type="submit"
               className={`flex-1 text-white rounded-md text-sm ${editingId ? "bg-amber-600 hover:bg-amber-500" : "bg-blue-900 hover:bg-blue-800"}`}
             >
-              {editingId ? "अपडेट गर्नुहोस् (Update)" : "सबमिट गर्नुहोस् (Submit)"}
+              {editingId
+                ? "अपडेट गर्नुहोस् (Update)"
+                : "सबमिट गर्नुहोस् (Submit)"}
             </Button>
           </CardFooter>
         </form>

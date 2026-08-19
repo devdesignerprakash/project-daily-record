@@ -15,6 +15,7 @@ import {
 import api from "@/lib/api";
 import { formatDate, formatTime } from "@/lib/utils";
 import { MODULE_RECORDS_CONFIG } from "@/lib/moduleRecordsConfig";
+import NepaliDatePickerField from "@/components/ui/NepaliDatePickerField";
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -93,23 +94,21 @@ export default function ModuleRecordsModal({ moduleKey, onClose }) {
         <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-end gap-3">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-zinc-400">देखि मिति (From)</label>
-            <Input
-              type="date"
+            <NepaliDatePickerField
               value={fromDate}
               max={toDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="text-sm bg-transparent border-slate-200 dark:border-zinc-800 w-full sm:w-44"
+              className="w-full sm:w-44"
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-zinc-400">सम्म मिति (To)</label>
-            <Input
-              type="date"
+            <NepaliDatePickerField
               value={toDate}
               min={fromDate}
               max={todayStr()}
               onChange={(e) => setToDate(e.target.value)}
-              className="text-sm bg-transparent border-slate-200 dark:border-zinc-800 w-full sm:w-44"
+              className="w-full sm:w-44"
             />
           </div>
           <Button

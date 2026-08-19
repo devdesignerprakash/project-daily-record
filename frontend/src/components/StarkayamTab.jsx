@@ -23,6 +23,7 @@ import {
 import { PlusCircle, Calendar, ShieldCheck, Pencil } from "lucide-react";
 import api from "@/lib/api";
 import { formatTime } from "@/lib/utils";
+import NepaliDatePickerField from "@/components/ui/NepaliDatePickerField";
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -81,14 +82,11 @@ export default function StarkayamTab({ records, isAdmin, onSuccess, onError }) {
                 <Label htmlFor="starkayam-date" className="text-xs font-semibold">
                   मिति (Date) — पुरानो मितिको लागि परिवर्तन गर्न सकिन्छ
                 </Label>
-                <Input
+                <NepaliDatePickerField
                   id="starkayam-date"
-                  type="date"
                   max={todayStr()}
-                  required
                   value={form.date}
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  className="text-sm bg-transparent border-slate-200 dark:border-zinc-800"
                 />
               </div>
             )}
