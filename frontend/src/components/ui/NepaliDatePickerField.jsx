@@ -44,6 +44,10 @@ export default function NepaliDatePickerField({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Client-only mount flag so SSR renders a plain input (avoiding a
+    // hydration mismatch with the calendar widget) — no external system to
+    // synchronize with here, so the one-time setState is intentional.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

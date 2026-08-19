@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { X, CalendarSearch, RefreshCw, ShieldAlert, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -14,11 +13,18 @@ import {
 } from "@/components/ui/table";
 import api from "@/lib/api";
 import * as XLSX from "xlsx";
-import NepaliDatePickerField from "@/components/ui/NepaliDatePickerField";
+import NepaliDatePickerField, { toNepaliDateObj } from "@/components/ui/NepaliDatePickerField";
 
 const sumField = (arr, field) => (arr || []).reduce((s, r) => s + (Number(r[field]) || 0), 0);
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
+
+// AD "YYYY-MM-DD" → Nepali (BS) "YYYY/MM/DD" in Devanagari digits, for
+// display in the तपसिल header and Excel exports.
+const toBsLabel = (adDateStr) => {
+  const nd = toNepaliDateObj(adDateStr);
+  return nd ? nd.format("YYYY/MM/DD", "np") : adDateStr;
+};
 
 // Same तपसिल row mapping used by the official letter (LetterModal) —
 // keeps this admin summary and the printed letter consistent.
@@ -151,7 +157,9 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
   const totalNabikaran = rows.reduce((s, r) => s + (r.nabikaran || 0), 0);
   const grandTotal      = totalNaya + totalNabikaran;
 
-  const rangeLabel = fromDate === toDate ? `मिति ${fromDate}` : `मिति ${fromDate} देखि ${toDate} सम्म`;
+  const rangeLabel = fromDate === toDate
+    ? `मिति ${toBsLabel(fromDate)}`
+    : `मिति ${toBsLabel(fromDate)} देखि ${toBsLabel(toDate)} सम्म`;
 
   const downloadExcel = () => {
     const titleLine = `सवारी परीक्षण कार्यालय टेकु, ${rangeLabel}`;
@@ -192,7 +200,7 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
     setError("");
     try {
       const lastEntryRes = await api.get("/api/admin/last-entry-date");
-      const previousDate = lastEntryRes.date;
+      const previousDate =  lastEntryRes.date;
       if (!previousDate) {
         setError("अघिल्लो कुनै पनि मितिमा डाटा फेला परेन।");
         return;
@@ -206,12 +214,12 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
 
       const blockA = buildBlock(
         buildRows(prevRes.data),
-        `सवारी परीक्षण कार्यालय टेकु, मिति ${previousDate} (अघिल्लो प्रविष्टि मिति)`
+        `सवारी परीक्षण कार्यालय टेकु, मिति ${toBsLabel(previousDate)} (अघिल्लो प्रविष्टि मिति)`
       );
       const blankRow = ["", "", "", "", ""];
       const blockB = buildBlock(
         buildRows(todayRes.data),
-        `सवारी परीक्षण कार्यालय टेकु, मिति ${today} (आजको दिन)`
+        `सवारी परीक्षण कार्यालय टेकु, मिति ${toBsLabel(today)} (आजको दिन)`
       );
       const blockBStart = blockA.length + 4;
 
@@ -223,7 +231,7 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "तपसिल");
-      XLSX.writeFile(wb, `all-modules-prev-and-today-${previousDate}_${today}.xlsx`);
+      XLSX.writeFile(wb, `कार्यालयकाे दैनिक विवरण-${toNepaliDateObj(previousDate)}_${toNepaliDateObj(today)}.xlsx`);
     } catch (err) {
       setError(err.message || "एक्सेल डाउनलोड गर्न समस्या भयो।");
     } finally {

@@ -29,7 +29,8 @@
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "typescript": "^5.9.3"
   },
   "overrides": {
     "@zener/nepali-datepicker-react": {
@@ -38,9 +39,20 @@
     }
   },
   "supportedArchitectures": {
-    "os": ["current", "linux", "win32"],
-    "cpu": ["current", "x64"],
-    "libc": ["current", "musl", "glibc"]
+    "os": [
+      "current",
+      "linux",
+      "win32"
+    ],
+    "cpu": [
+      "current",
+      "x64"
+    ],
+    "libc": [
+      "current",
+      "musl",
+      "glibc"
+    ]
   },
   "optionalDependencies": {
     "@next/swc-linux-x64-musl": "16.2.10",
