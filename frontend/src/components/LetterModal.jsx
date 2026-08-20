@@ -496,6 +496,13 @@ export default function LetterModal({ isOpen, onClose }) {
         @media print {
           @page { size: A4; margin: 0; }
 
+          /* Browsers skip background colors by default when printing —
+             force them on so the तपसिल table header/total shading shows. */
+          #printable-letter * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
           /* Hide the rest of the app — printing only the letter itself.
              (position:fixed/sticky ancestors get repeated on every printed
              page by the browser, so the whole overlay chain is reset to

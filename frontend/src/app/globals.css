@@ -130,53 +130,9 @@
   }
 }
 
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #printable-letter, #printable-letter * {
-    visibility: visible;
-  }
-  #printable-letter {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 1.5cm !important;
-    background-color: white !important;
-    color: black !important;
-    box-shadow: none !important;
-    border: none !important;
-  }
-  #printable-letter input,
-  #printable-letter select,
-  #printable-letter textarea {
-    border: none !important;
-    background: transparent !important;
-    color: black !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    outline: none !important;
-    box-shadow: none !important;
-    width: 100% !important;
-    font-size: inherit !important;
-    font-family: inherit !important;
-  }
-  /* Hide the border bottom/edit lines for printing */
-  .no-print-border {
-    border-bottom: none !important;
-  }
-  /* Force colors for printing */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  /* Ensure letterhead image container keeps its height */
-  #printable-letter .letterhead-img-wrapper {
-    height: 130px !important;
-    position: relative !important;
-    display: block !important;
-  }
-}
+/* Letter print rules live in LetterModal.jsx (scoped `<style jsx global>`,
+   scattered #printable-letter selectors here previously fought with it —
+   two competing print strategies on the same element, which is what let
+   the letterhead image cover the मिति/ने.सं. dates instead of pushing them
+   down: this file forced the image's wrapper to a fixed 130px while
+   LetterModal's rules let the image render at its natural (taller) width. */
