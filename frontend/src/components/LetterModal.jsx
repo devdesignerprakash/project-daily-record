@@ -507,7 +507,7 @@ export default function LetterModal({ isOpen, onClose }) {
              (position:fixed/sticky ancestors get repeated on every printed
              page by the browser, so the whole overlay chain is reset to
              normal static flow instead of relying on visibility tricks.) */
-          header, main { display: none !important; }
+          header, main, footer { display: none !important; }
           .no-print { display: none !important; }
           .no-print-border { border: none !important; }
 
