@@ -516,6 +516,7 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
   const [importCandidates, setImportCandidates] = useState(null); // null = no file loaded yet
   const [loadingImportFile, setLoadingImportFile] = useState(false);
   const [importingDate, setImportingDate] = useState(null); // AD date string currently being imported, or null
+  const [importingAll, setImportingAll] = useState(false);
   const [importError, setImportError] = useState("");
   const [importMessage, setImportMessage] = useState("");
 
@@ -814,35 +815,76 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
     }
   };
 
+  // Shared by the single-date and import-all paths below. Throws on
+  // failure (already-has-data block, or a request error) so both callers
+  // can handle/report it their own way.
+  const importOneCandidate = async (candidate) => {
+    // Final authoritative check right before writing — the candidate list
+    // is only as fresh as when the file was picked, and /data-dates only
+    // covers dates before today, so today's date needs this too.
+    const existing = await api.get("/api/admin/records-by-date", { params: { date: candidate.ad } });
+    const hasExisting = Object.values(existing.data || {}).some((arr) => Array.isArray(arr) && arr.length > 0);
+    if (hasExisting) {
+      throw new Error(`${toBsLabel(candidate.ad)} मा पहिले नै डाटाबेसमा डाटा रहेको छ — आयात रोकियो।`);
+    }
+
+    const payloads = mapExcelRowToModulePayloads(candidate.row);
+    const entries = Object.entries(payloads);
+    if (entries.length === 0) {
+      throw new Error(`${toBsLabel(candidate.ad)} मा आयात गर्नलायक कुनै मान भेटिएन।`);
+    }
+    for (const [moduleKey, fields] of entries) {
+      await api.post(MODULE_IMPORT_ENDPOINTS[moduleKey], { ...fields, date: candidate.ad });
+    }
+  };
+
   const handleImportDate = async (candidate) => {
     setImportingDate(candidate.ad);
     setImportError("");
     setImportMessage("");
     try {
-      // Final authoritative check right before writing — the candidate list
-      // above is only as fresh as when the file was picked, and /data-dates
-      // only covers dates before today, so today's date needs this too.
-      const existing = await api.get("/api/admin/records-by-date", { params: { date: candidate.ad } });
-      const hasExisting = Object.values(existing.data || {}).some((arr) => Array.isArray(arr) && arr.length > 0);
-      if (hasExisting) {
-        throw new Error(`${toBsLabel(candidate.ad)} मा पहिले नै डाटाबेसमा डाटा रहेको छ — आयात रोकियो।`);
-      }
-
-      const payloads = mapExcelRowToModulePayloads(candidate.row);
-      const entries = Object.entries(payloads);
-      if (entries.length === 0) {
-        throw new Error("यस मितिमा आयात गर्नलायक कुनै मान भेटिएन।");
-      }
-      for (const [moduleKey, fields] of entries) {
-        await api.post(MODULE_IMPORT_ENDPOINTS[moduleKey], { ...fields, date: candidate.ad });
-      }
-
+      await importOneCandidate(candidate);
       setImportCandidates((prev) => (prev || []).filter((c) => c.ad !== candidate.ad));
       setImportMessage(`${toBsLabel(candidate.ad)} को डाटा सफलतापूर्वक आयात भयो।`);
     } catch (err) {
       setImportError(err.message || "आयात गर्न समस्या भयो।");
     } finally {
       setImportingDate(null);
+    }
+  };
+
+  // Imports every candidate date one after another (sequential — each one
+  // does its own live "already has data" check right before writing, so
+  // running them in parallel could double-import if two candidates somehow
+  // resolved to overlapping module writes).
+  const handleImportAll = async () => {
+    const candidates = importCandidates || [];
+    if (candidates.length === 0) return;
+
+    setImportingAll(true);
+    setImportError("");
+    setImportMessage("");
+    let successCount = 0;
+    const failures = [];
+
+    for (const candidate of candidates) {
+      setImportingDate(candidate.ad);
+      try {
+        await importOneCandidate(candidate);
+        successCount += 1;
+        setImportCandidates((prev) => (prev || []).filter((c) => c.ad !== candidate.ad));
+      } catch (err) {
+        failures.push(`${toBsLabel(candidate.ad)}: ${err.message}`);
+      }
+    }
+
+    setImportingDate(null);
+    setImportingAll(false);
+    if (failures.length === 0) {
+      setImportMessage(`${successCount} मितिको डाटा सफलतापूर्वक आयात भयो।`);
+    } else {
+      if (successCount > 0) setImportMessage(`${successCount} मिति आयात भयो।`);
+      setImportError(`${failures.length} मिति आयात हुन सकेन:\n${failures.join("\n")}`);
     }
   };
 
@@ -1013,7 +1055,7 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
           </div>
 
           {importError && (
-            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 whitespace-pre-line">
               ⚠ {importError}
             </div>
           )}
@@ -1028,21 +1070,37 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
               {importCandidates.length === 0 ? (
                 <p className="text-xs text-slate-500">आयात गर्नलायक कुनै नयाँ मिति भेटिएन।</p>
               ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {importCandidates.map((c) => (
-                    <button
-                      key={c.ad}
-                      type="button"
-                      onClick={() => handleImportDate(c)}
-                      disabled={importingDate !== null}
-                      title="यो मिति आयात गर्न क्लिक गर्नुहोस्"
-                      className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 text-xs font-mono hover:bg-purple-200 dark:hover:bg-purple-900/70 disabled:opacity-50 flex items-center gap-1"
+                <>
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <p className="text-xs text-slate-500">
+                      {importCandidates.length} मिति फेला परे — एउटा-एउटा गरी वा सबै एकैचोटि आयात गर्न सकिन्छ।
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={handleImportAll}
+                      disabled={importingDate !== null || importingAll}
+                      className="bg-purple-700 hover:bg-purple-600 text-white text-xs flex items-center gap-1.5 shrink-0"
                     >
-                      {importingDate === c.ad && <RefreshCw className="w-3 h-3 animate-spin" />}
-                      {toBsLabel(c.ad)}
-                    </button>
-                  ))}
-                </div>
+                      {importingAll ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />}
+                      सबै आयात गर्नुहोस् ({importCandidates.length})
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {importCandidates.map((c) => (
+                      <button
+                        key={c.ad}
+                        type="button"
+                        onClick={() => handleImportDate(c)}
+                        disabled={importingDate !== null || importingAll}
+                        title="यो मिति आयात गर्न क्लिक गर्नुहोस्"
+                        className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 text-xs font-mono hover:bg-purple-200 dark:hover:bg-purple-900/70 disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {importingDate === c.ad && <RefreshCw className="w-3 h-3 animate-spin" />}
+                        {toBsLabel(c.ad)}
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           )}
