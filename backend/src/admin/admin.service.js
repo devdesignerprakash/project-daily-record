@@ -121,6 +121,30 @@ class AdminService {
 
         return new Date(Math.max(...timestamps));
     }
+
+    // Every calendar date (across all modules) that has at least one record,
+    // before today — used to find dates with real data that are missing from
+    // the manually-maintained Progress Records Excel (the "All Data" sheet
+    // never gets duplicate Year/Month/Day rows, so only dates with actual
+    // data are candidates here).
+    static async getAllDataDates() {
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const perModelDates = await Promise.all(
+            ALL_MODELS.map((Model) =>
+                Model.aggregate([
+                    { $match: { createdAt: { $lt: startOfToday } } },
+                    { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } } },
+                ])
+            )
+        );
+
+        const dateSet = new Set();
+        perModelDates.forEach((docs) => docs.forEach((doc) => dateSet.add(doc._id)));
+
+        return Array.from(dateSet).sort();
+    }
 }
 
 export default AdminService;

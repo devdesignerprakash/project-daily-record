@@ -279,7 +279,7 @@ export default function LetterModal({ isOpen, onClose }) {
                     value={neSambat}
                     onChange={(e) => setNeSambat(e.target.value)}
                     placeholder={sambatLoading ? "ल्याइँदैछ…" : ""}
-                    className="border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0 w-32 text-right bg-transparent outline-none font-semibold no-print-border"
+                    className="border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0 w-64 text-right bg-transparent outline-none font-semibold no-print-border"
                     style={{ fontFamily: "inherit" }}
                   />
                   <button

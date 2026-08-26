@@ -35,6 +35,15 @@ class AdminController {
             res.status(400).json({ message: error.message });
         }
     }
+
+    static async getAllDataDates(req, res) {
+        try {
+            const dates = await AdminService.getAllDataDates();
+            res.status(200).json({ message: 'Data dates fetched successfully', dates });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
 }
 
 export default AdminController;

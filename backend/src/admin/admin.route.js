@@ -8,5 +8,6 @@ const adminRouter = express.Router();
 adminRouter.get('/records-by-date', verifyToken, authorizedUser('admin'), AdminController.getAllModuleRecordsByDate);
 adminRouter.get('/records-by-range', verifyToken, authorizedUser('admin'), AdminController.getAllModuleRecordsByRange);
 adminRouter.get('/last-entry-date', verifyToken, authorizedUser('admin'), AdminController.getLastEntryDate);
+adminRouter.get('/data-dates', verifyToken, authorizedUser('admin'), AdminController.getAllDataDates);
 
 export default adminRouter;
