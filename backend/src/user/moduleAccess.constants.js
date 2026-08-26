@@ -10,4 +10,5 @@ export const MODULE_KEYS = [
     'starkayam',
     'monitoring',
     'transportRegistration',
+    'revenue',
 ];

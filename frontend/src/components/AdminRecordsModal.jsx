@@ -87,9 +87,10 @@ const readExistingExcelDates = (workbook) => {
   return { entered, lastSN, sheetName };
 };
 
-// Column order of the "All Data" sheet (21 columns). Fields with no source
-// in the app's DB (route-permit "परिवर्तन"/"सरूवा सहमति", and राजश्व/revenue,
-// which no module tracks at all) are left as 0 / "" for manual entry.
+// Column order of the "All Data" sheet (21 columns). The only field with
+// no source in the app's DB is the pair of route-permit columns
+// "परिवर्तन"/"सरूवा सहमति" — left as 0 for manual entry. जम्मा राजश्व
+// (column U) is now backed by the "revenue" module.
 const buildAllDataRow = (sn, adDateStr, data) => {
   const nd = toNepaliDateObj(adDateStr);
   const [year, month, day] = nd.format("YYYY-MM-DD").split("-").map(Number);
@@ -101,6 +102,7 @@ const buildAllDataRow = (sn, adDateStr, data) => {
   const tr = data?.transportRegistration || [];
   const rw = data?.roadworthiness || [];
   const star = data?.starkayam || [];
+  const rev = data?.revenue || [];
 
   return [
     sn, year, monthName, day,
@@ -110,7 +112,7 @@ const buildAllDataRow = (sn, adDateStr, data) => {
     sumField(tr, "naya"), sumField(tr, "thap"), sumField(tr, "nabikaran"),
     sumField(rw, "roadworthiness_test_done"),
     sumField(star, "naya"), sumField(star, "nabikaran"),
-    "",
+    sumField(rev, "amount") || "",
   ];
 };
 
@@ -119,8 +121,8 @@ const buildAllDataRow = (sn, adDateStr, data) => {
 // (typed directly into the sheet, never submitted through the app) into
 // the database. Only includes a module when at least one of its fields is
 // non-zero — matches how staff wouldn't submit an all-zero form. The two
-// route-permit columns with no DB field (परिवर्तन/सरूवा सहमति) and राजश्व
-// (revenue, tracked nowhere) are simply not read back.
+// route-permit columns with no DB field (परिवर्तन/सरूवा सहमति) are simply
+// not read back.
 const MODULE_IMPORT_ENDPOINTS = {
   fitness: "/api/fitness",
   pollution: "/api/pollution",
@@ -128,11 +130,12 @@ const MODULE_IMPORT_ENDPOINTS = {
   transportRegistration: "/api/transport-registration",
   roadworthiness: "/api/roadworthiness",
   starkayam: "/api/starkayam",
+  revenue: "/api/revenue",
 };
 
 const mapExcelRowToModulePayloads = (row) => {
   const num = (v) => Number(v) || 0;
-  const [, , , , fitNaya, fitNab, fitPrat, polPass, polFail, rpNaya, rpNab, , rpPrat, , trNaya, trThap, trNab, rwTest, starNaya, starNab] = row;
+  const [, , , , fitNaya, fitNab, fitPrat, polPass, polFail, rpNaya, rpNab, , rpPrat, , trNaya, trThap, trNab, rwTest, starNaya, starNab, revenueAmount] = row;
   const payloads = {};
 
   if ([fitNaya, fitNab, fitPrat].some((v) => num(v) > 0)) {
@@ -152,6 +155,9 @@ const mapExcelRowToModulePayloads = (row) => {
   }
   if ([starNaya, starNab].some((v) => num(v) > 0)) {
     payloads.starkayam = { naya: num(starNaya), nabikaran: num(starNab) };
+  }
+  if (num(revenueAmount) > 0) {
+    payloads.revenue = { amount: num(revenueAmount) };
   }
   return payloads;
 };

@@ -11,6 +11,7 @@ export const MODULE_OPTIONS = [
   { key: "starkayam", label: "स्तर कायम" },
   { key: "monitoring", label: "कारखाना अनुगमन" },
   { key: "transportRegistration", label: "यातायात पञ्जीकरण" },
+  { key: "revenue", label: "जम्मा राजश्व" },
 ];
 
 export const MODULE_KEYS = MODULE_OPTIONS.map((m) => m.key);

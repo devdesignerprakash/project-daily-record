@@ -7,7 +7,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Activity, MapPin, ClipboardList, Wind, Wrench, Zap, ShieldCheck, Factory, Bus } from "lucide-react";
+import { Activity, MapPin, ClipboardList, Wind, Wrench, Zap, ShieldCheck, Factory, Bus, Landmark } from "lucide-react";
 
 const clickableCard =
   "cursor-pointer transition-transform hover:-translate-y-0.5 hover:shadow-md";
@@ -118,8 +118,8 @@ export default function StatsGrid({ stats, onSelectModule }) {
         </Card>
       </div>
 
-      {/* Row 2: New 5 modules */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Row 2: New 6 modules */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         {/* Mechanical Test */}
         <Card
           {...asButton("mechanicalTest")}
@@ -220,6 +220,26 @@ export default function StatsGrid({ stats, onSelectModule }) {
             <span>नयाँ: <strong>{stats.transportRegistration?.naya ?? 0}</strong></span>
             <span>नवी: <strong>{stats.transportRegistration?.nabikaran ?? 0}</strong></span>
             <span>थप: <strong>{stats.transportRegistration?.thap ?? 0}</strong></span>
+          </CardContent>
+        </Card>
+
+        {/* Revenue */}
+        <Card
+          {...asButton("revenue")}
+          className={`relative overflow-hidden bg-gradient-to-br from-lime-50 to-white dark:from-zinc-900 dark:to-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm ${clickableCard}`}>
+          <div className="absolute top-2 right-2 p-2 bg-lime-100 dark:bg-lime-950 rounded-lg text-lime-700 dark:text-lime-300">
+            <Landmark className="w-5 h-5" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardDescription className="text-xs font-semibold text-slate-500 uppercase">
+              जम्मा राजश्व
+            </CardDescription>
+            <CardTitle className="text-3xl font-black text-lime-900 dark:text-lime-400">
+              {stats.revenue?.total ?? 0}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-xs text-slate-500">
+            <span>आज जम्मा: <strong>{stats.revenue?.total ?? 0}</strong></span>
           </CardContent>
         </Card>
       </div>

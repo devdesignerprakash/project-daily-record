@@ -73,4 +73,11 @@ export const MODULE_RECORDS_CONFIG = {
       { field: "nabikaran", label: "नवीकरण" },
     ],
   },
+  revenue: {
+    label: "जम्मा राजश्व",
+    apiPath: "/api/revenue",
+    columns: [
+      { field: "amount", label: "रकम" },
+    ],
+  },
 };

@@ -7,7 +7,7 @@ import { fetchCurrentUser, loginUser, logoutUser } from "@/lib/store/authSlice";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Activity, MapPin, ClipboardList, Search, CheckCircle2, AlertCircle,
-  Building, Wind, FileText, Users, Wrench, Zap, ShieldCheck, Factory, Bus, CalendarSearch
+  Building, Wind, FileText, Users, Wrench, Zap, ShieldCheck, Factory, Bus, CalendarSearch, Landmark
 } from "lucide-react";
 
 import LoginView                from "@/components/LoginView";
@@ -26,6 +26,7 @@ import PatakeTab                from "@/components/PatakeTab";
 import StarkayamTab             from "@/components/StarkayamTab";
 import MonitoringTab            from "@/components/MonitoringTab";
 import TransportRegistrationTab from "@/components/TransportRegistrationTab";
+import RevenueTab               from "@/components/RevenueTab";
 import { MODULE_KEYS }          from "@/lib/modules";
 
 // ---------- initial stats shape ----------
@@ -39,6 +40,7 @@ const EMPTY_STATS = {
   starkayam:             { total: 0 },
   monitoring:            { naya: 0, nabikaran: 0, total: 0 },
   transportRegistration: { naya: 0, nabikaran: 0, thap: 0, total: 0 },
+  revenue:               { total: 0 },
 };
 
 export default function Home() {
@@ -79,6 +81,7 @@ export default function Home() {
   const [recentStarkayam,           setRecentStarkayam]           = useState([]);
   const [recentMonitoring,          setRecentMonitoring]          = useState([]);
   const [recentTransportReg,        setRecentTransportReg]        = useState([]);
+  const [recentRevenue,             setRecentRevenue]             = useState([]);
 
   // ── Flash helpers ─────────────────────────────────────────────
   const showSuccess = (msg) => { setSuccessMsg(msg); setErrorMsg("");   setTimeout(() => setSuccessMsg(""), 5000); };
@@ -198,6 +201,13 @@ export default function Home() {
         transportRegistration: { ...trTotals, total: trTotals.naya + trTotals.nabikaran + trTotals.thap },
       }));
 
+      // ── Revenue ──
+      const revData = await api.get("/api/revenue/by-date");
+      const revList = revData.data || [];
+      setRecentRevenue(revList);
+      const revTotal = revList.reduce((sum, c) => sum + (c.amount || 0), 0);
+      setStats((p) => ({ ...p, revenue: { total: revTotal } }));
+
     } catch (err) {
       console.error("API daily data error:", err);
       showError(err.message || "डाटा ल्याउने क्रममा समस्या भयो।");
@@ -247,6 +257,7 @@ export default function Home() {
     setRecentStarkayam([]);
     setRecentMonitoring([]);
     setRecentTransportReg([]);
+    setRecentRevenue([]);
   };
 
   // ── Refresh after any child form submits ──────────────────────
@@ -286,7 +297,7 @@ export default function Home() {
   const defaultTab = MODULE_KEYS.find(hasModule) || "search";
   const canPrintLetter = isAdmin || user?.canPrintLetter !== false;
   // Total tab count for grid columns
-  const tabCount = isAdmin ? 11 : 10;
+  const tabCount = isAdmin ? 12 : 11;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 flex flex-col font-sans">
@@ -373,6 +384,11 @@ export default function Home() {
                       <Bus className="w-4 h-4 shrink-0" /><span>यातायात पञ्जीकरण</span>
                     </TabsTrigger>
                   )}
+                  {hasModule("revenue") && (
+                    <TabsTrigger value="revenue" className="rounded-lg py-2 px-3 text-xs md:text-sm flex items-center justify-center gap-1.5 font-medium data-active:bg-white dark:data-active:bg-zinc-800 data-active:text-lime-700 dark:data-active:text-lime-400 shadow-sm">
+                      <Landmark className="w-4 h-4 shrink-0" /><span>जम्मा राजश्व</span>
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 <div className="flex flex-wrap items-start gap-2 self-start">
@@ -456,6 +472,12 @@ export default function Home() {
             {hasModule("transportRegistration") && (
               <TabsContent value="transportRegistration">
                 <TransportRegistrationTab records={recentTransportReg} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
+              </TabsContent>
+            )}
+
+            {hasModule("revenue") && (
+              <TabsContent value="revenue">
+                <RevenueTab records={recentRevenue} isAdmin={isAdmin} onSuccess={handleSuccess} onError={showError} />
               </TabsContent>
             )}
 

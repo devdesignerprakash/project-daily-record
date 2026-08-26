@@ -7,6 +7,7 @@ import PatakeService from '../patake/patake.service.js';
 import StarkayamService from '../starkayam/starkayam.service.js';
 import MonitoringService from '../monitoring/monitoring.service.js';
 import TransportRegistrationService from '../transportRegistration/transportRegistration.service.js';
+import RevenueService from '../revenue/revenue.service.js';
 
 import Fitness from '../fitness/fitness.schema.js';
 import RoutePermit from '../routePermit/routePermit.schema.js';
@@ -17,10 +18,11 @@ import Patake from '../patake/patake.schema.js';
 import Starkayam from '../starkayam/starkayam.schema.js';
 import Monitoring from '../monitoring/monitoring.schema.js';
 import TransportRegistration from '../transportRegistration/transportRegistration.schema.js';
+import Revenue from '../revenue/revenue.schema.js';
 
 const ALL_MODELS = [
     Fitness, RoutePermit, Roadworthiness, Pollution, MechanicalTest,
-    Patake, Starkayam, Monitoring, TransportRegistration,
+    Patake, Starkayam, Monitoring, TransportRegistration, Revenue,
 ];
 
 class AdminService {
@@ -35,6 +37,7 @@ class AdminService {
             starkayam,
             monitoring,
             transportRegistration,
+            revenue,
         ] = await Promise.all([
             FitnessService.getFitnessDataByDate(dateString),
             RoutePermitService.getRoutePermitDataByDate(dateString),
@@ -45,6 +48,7 @@ class AdminService {
             StarkayamService.getStarkayamDataByDate(dateString),
             MonitoringService.getMonitoringDataByDate(dateString),
             TransportRegistrationService.getTransportRegistrationDataByDate(dateString),
+            RevenueService.getRevenueDataByDate(dateString),
         ]);
 
         return {
@@ -57,6 +61,7 @@ class AdminService {
             starkayam,
             monitoring,
             transportRegistration,
+            revenue,
         };
     }
 
@@ -71,6 +76,7 @@ class AdminService {
             starkayam,
             monitoring,
             transportRegistration,
+            revenue,
         ] = await Promise.all([
             FitnessService.getFitnessDataByDateRange(startDate, endDate),
             RoutePermitService.getRoutePermitDataByDateRange(startDate, endDate),
@@ -81,6 +87,7 @@ class AdminService {
             StarkayamService.getStarkayamDataByDateRange(startDate, endDate),
             MonitoringService.getMonitoringDataByDateRange(startDate, endDate),
             TransportRegistrationService.getTransportRegistrationDataByDateRange(startDate, endDate),
+            RevenueService.getRevenueDataByDateRange(startDate, endDate),
         ]);
 
         return {
@@ -93,6 +100,7 @@ class AdminService {
             starkayam,
             monitoring,
             transportRegistration,
+            revenue,
         };
     }
 
