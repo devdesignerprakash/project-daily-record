@@ -114,6 +114,48 @@ const buildAllDataRow = (sn, adDateStr, data) => {
   ];
 };
 
+// Inverse of buildAllDataRow's column layout: turns one "All Data" row back
+// into per-module create payloads, for importing historical Excel rows
+// (typed directly into the sheet, never submitted through the app) into
+// the database. Only includes a module when at least one of its fields is
+// non-zero — matches how staff wouldn't submit an all-zero form. The two
+// route-permit columns with no DB field (परिवर्तन/सरूवा सहमति) and राजश्व
+// (revenue, tracked nowhere) are simply not read back.
+const MODULE_IMPORT_ENDPOINTS = {
+  fitness: "/api/fitness",
+  pollution: "/api/pollution",
+  routePermit: "/api/route-permit",
+  transportRegistration: "/api/transport-registration",
+  roadworthiness: "/api/roadworthiness",
+  starkayam: "/api/starkayam",
+};
+
+const mapExcelRowToModulePayloads = (row) => {
+  const num = (v) => Number(v) || 0;
+  const [, , , , fitNaya, fitNab, fitPrat, polPass, polFail, rpNaya, rpNab, , rpPrat, , trNaya, trThap, trNab, rwTest, starNaya, starNab] = row;
+  const payloads = {};
+
+  if ([fitNaya, fitNab, fitPrat].some((v) => num(v) > 0)) {
+    payloads.fitness = { naya: num(fitNaya), nabikaran: num(fitNab), pratilipi: num(fitPrat) };
+  }
+  if ([polPass, polFail].some((v) => num(v) > 0)) {
+    payloads.pollution = { pass: num(polPass), fail: num(polFail) };
+  }
+  if ([rpNaya, rpNab, rpPrat].some((v) => num(v) > 0)) {
+    payloads.routePermit = { naya: num(rpNaya), nabikaran: num(rpNab), pratilipi: num(rpPrat) };
+  }
+  if ([trNaya, trThap, trNab].some((v) => num(v) > 0)) {
+    payloads.transportRegistration = { naya: num(trNaya), thap: num(trThap), nabikaran: num(trNab) };
+  }
+  if (num(rwTest) > 0) {
+    payloads.roadworthiness = { roadworthiness_test_done: num(rwTest) };
+  }
+  if ([starNaya, starNab].some((v) => num(v) > 0)) {
+    payloads.starkayam = { naya: num(starNaya), nabikaran: num(starNab) };
+  }
+  return payloads;
+};
+
 // ---------------------------------------------------------------------
 // Surgical .xlsx/.xlsm zip editing.
 //
@@ -467,6 +509,16 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
   const [loadedFileMeta, setLoadedFileMeta] = useState(null); // { name, isXlsm }
   const [hasWritableHandle, setHasWritableHandle] = useState(false); // mirrors fileHandleRef for render
 
+  // Import-from-Excel (Excel → database) — separate flow from the
+  // check/append above (database → Excel). Read-only on the file, so no
+  // File System Access handle needed here.
+  const importFileInputRef = useRef(null);
+  const [importCandidates, setImportCandidates] = useState(null); // null = no file loaded yet
+  const [loadingImportFile, setLoadingImportFile] = useState(false);
+  const [importingDate, setImportingDate] = useState(null); // AD date string currently being imported, or null
+  const [importError, setImportError] = useState("");
+  const [importMessage, setImportMessage] = useState("");
+
   const fetchRecords = useCallback(async (from, to) => {
     setLoading(true);
     setError("");
@@ -704,6 +756,96 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
     }
   };
 
+  // ── Import from Excel (Excel → database) ──
+  // Opposite direction of the check/append flow above: finds rows in the
+  // "All Data" sheet that have real data but aren't in the database yet
+  // (e.g. historical days typed directly into Excel, never submitted
+  // through the app), and lets an admin import one at a time.
+  const triggerImportFilePick = () => importFileInputRef.current?.click();
+
+  const handleImportFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setLoadingImportFile(true);
+    setImportError("");
+    setImportMessage("");
+    setImportCandidates(null);
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const sheetName = findAllDataSheetName(workbook);
+      if (!sheetName) {
+        setImportError('"All Data" पाना यस फाइलमा फेला परेन।');
+        return;
+      }
+
+      const res = await api.get("/api/admin/data-dates");
+      const alreadyInDb = new Set(res.dates || []);
+
+      const excelRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: null });
+      const candidates = [];
+      for (let i = 1; i < excelRows.length; i++) {
+        const row = excelRows[i];
+        if (!row) continue;
+        const [, year, monthName, day] = row;
+        if (!year || !monthName || !day) continue;
+        const hasData = row.slice(4).some((v) => Number(v) > 0);
+        if (!hasData) continue;
+        const monthIdx = BS_MONTHS.indexOf(String(monthName).trim());
+        if (monthIdx === -1) continue;
+        const bsStr = `${year}-${String(monthIdx + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        let ad;
+        try {
+          ad = new NepaliDate(bsStr).toAD("en").toString();
+        } catch {
+          continue;
+        }
+        if (alreadyInDb.has(ad)) continue;
+        candidates.push({ ad, row });
+      }
+      candidates.sort((a, b) => (a.ad < b.ad ? 1 : -1)); // most recent first
+      setImportCandidates(candidates);
+    } catch (err) {
+      setImportError(err.message || "एक्सेल पढ्न समस्या भयो।");
+    } finally {
+      setLoadingImportFile(false);
+    }
+  };
+
+  const handleImportDate = async (candidate) => {
+    setImportingDate(candidate.ad);
+    setImportError("");
+    setImportMessage("");
+    try {
+      // Final authoritative check right before writing — the candidate list
+      // above is only as fresh as when the file was picked, and /data-dates
+      // only covers dates before today, so today's date needs this too.
+      const existing = await api.get("/api/admin/records-by-date", { params: { date: candidate.ad } });
+      const hasExisting = Object.values(existing.data || {}).some((arr) => Array.isArray(arr) && arr.length > 0);
+      if (hasExisting) {
+        throw new Error(`${toBsLabel(candidate.ad)} मा पहिले नै डाटाबेसमा डाटा रहेको छ — आयात रोकियो।`);
+      }
+
+      const payloads = mapExcelRowToModulePayloads(candidate.row);
+      const entries = Object.entries(payloads);
+      if (entries.length === 0) {
+        throw new Error("यस मितिमा आयात गर्नलायक कुनै मान भेटिएन।");
+      }
+      for (const [moduleKey, fields] of entries) {
+        await api.post(MODULE_IMPORT_ENDPOINTS[moduleKey], { ...fields, date: candidate.ad });
+      }
+
+      setImportCandidates((prev) => (prev || []).filter((c) => c.ad !== candidate.ad));
+      setImportMessage(`${toBsLabel(candidate.ad)} को डाटा सफलतापूर्वक आयात भयो।`);
+    } catch (err) {
+      setImportError(err.message || "आयात गर्न समस्या भयो।");
+    } finally {
+      setImportingDate(null);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -840,6 +982,71 @@ export default function AdminRecordsModal({ isOpen, onClose }) {
             )}
           </div>
         )}
+
+        {/* ── Import from Excel (Excel → database) ── */}
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-900/30">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                एक्सेलबाट डाटाबेसमा डाटा आयात गर्नुहोस्
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-500 mt-0.5">
+                Progress Records.xlsm मा भएको तर डाटाबेसमा अझै नछिरेको मितिको डाटा छान्नुहोस्।
+              </p>
+            </div>
+            <input
+              ref={importFileInputRef}
+              type="file"
+              accept=".xlsx,.xlsm"
+              className="hidden"
+              onChange={handleImportFileSelected}
+            />
+            <Button
+              variant="outline"
+              onClick={triggerImportFilePick}
+              disabled={loadingImportFile}
+              className="text-sm border-purple-200 text-purple-700 dark:border-purple-800 dark:text-purple-400 flex items-center gap-1.5 shrink-0"
+            >
+              {loadingImportFile ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 shrink-0" />}
+              एक्सेल छान्नुहोस्
+            </Button>
+          </div>
+
+          {importError && (
+            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+              ⚠ {importError}
+            </div>
+          )}
+          {importMessage && (
+            <div className="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700">
+              ✓ {importMessage}
+            </div>
+          )}
+
+          {importCandidates !== null && (
+            <div className="mt-3">
+              {importCandidates.length === 0 ? (
+                <p className="text-xs text-slate-500">आयात गर्नलायक कुनै नयाँ मिति भेटिएन।</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {importCandidates.map((c) => (
+                    <button
+                      key={c.ad}
+                      type="button"
+                      onClick={() => handleImportDate(c)}
+                      disabled={importingDate !== null}
+                      title="यो मिति आयात गर्न क्लिक गर्नुहोस्"
+                      className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 text-xs font-mono hover:bg-purple-200 dark:hover:bg-purple-900/70 disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {importingDate === c.ad && <RefreshCw className="w-3 h-3 animate-spin" />}
+                      {toBsLabel(c.ad)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* ── Body: single तपसिल-style datatable ── */}
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-zinc-950">
