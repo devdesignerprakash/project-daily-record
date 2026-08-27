@@ -259,8 +259,8 @@ export default function LetterModal({ isOpen, onClose }) {
             {/* ═══════════════════════════════════════
                 BELOW LETTERHEAD — मिति (Right side)
             ═══════════════════════════════════════ */}
-            <div className="px-10 pt-2 pb-2 flex justify-end items-center">
-              <div className="text-xs text-right text-slate-700 space-y-1">
+            <div className="px-4 sm:px-10 pt-2 pb-2 flex justify-end items-center">
+              <div className="w-full max-w-[17rem] text-xs text-right text-slate-700 space-y-1">
                 <div className="flex items-center gap-1 justify-end">
                   <span className="font-semibold">मिति:</span>
                   <input
@@ -268,7 +268,7 @@ export default function LetterModal({ isOpen, onClose }) {
                     value={miti}
                     onChange={(e) => setMiti(e.target.value)}
                     placeholder={sambatLoading ? "ल्याइँदैछ…" : ""}
-                    className="border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0 w-32 text-left bg-transparent outline-none font-semibold no-print-border"
+                    className="min-w-0 flex-1 border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0 text-left bg-transparent outline-none font-semibold no-print-border"
                     style={{ fontFamily: "inherit" }}
                   />
                 </div>
@@ -279,7 +279,7 @@ export default function LetterModal({ isOpen, onClose }) {
                     value={neSambat}
                     onChange={(e) => setNeSambat(e.target.value)}
                     placeholder={sambatLoading ? "ल्याइँदैछ…" : ""}
-                    className="border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0 w-64 text-right bg-transparent outline-none font-semibold no-print-border"
+                    className="min-w-0 flex-1 border-b border-dashed border-slate-400 focus:border-blue-500 px-1 py-0 text-left bg-transparent outline-none font-semibold no-print-border"
                     style={{ fontFamily: "inherit" }}
                   />
                   <button
@@ -287,7 +287,7 @@ export default function LetterModal({ isOpen, onClose }) {
                     onClick={fetchNeSambat}
                     disabled={sambatLoading}
                     title="वि.सं. मिति र नेपाल संवत मिति पुन: ल्याउनुहोस्"
-                    className="no-print p-0.5 rounded hover:bg-blue-100 text-blue-600 transition disabled:opacity-50"
+                    className="no-print shrink-0 p-0.5 rounded hover:bg-blue-100 text-blue-600 transition disabled:opacity-50"
                   >
                     <RefreshCw className={`w-3 h-3 ${sambatLoading ? "animate-spin" : ""}`} />
                   </button>
